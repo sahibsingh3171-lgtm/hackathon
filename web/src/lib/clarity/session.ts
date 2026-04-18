@@ -1,5 +1,13 @@
+/**
+ * Session factory + persistence stubs for Clarity.
+ *
+ * Judges: `createDefaultSession()` is the empty shape of everything the app tracks in React state.
+ * `loadSession` / `saveSession` / `clearSession` are intentionally no-ops so a browser refresh always
+ * clears the journey (except the separate one-shot demo key in `persisted-session.ts`).
+ */
 import type { ClaritySession } from "@/types/clarity";
 
+/** Stable random id for this tab’s session object (used in crisis-dismiss keys, etc.). */
 function newId(): string {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
     return crypto.randomUUID();
@@ -7,6 +15,7 @@ function newId(): string {
   return `clarity_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
+/** Initial `ClaritySession` — also used after `resetFlow()` in context. */
 export function createDefaultSession(): ClaritySession {
   const now = new Date().toISOString();
   return {

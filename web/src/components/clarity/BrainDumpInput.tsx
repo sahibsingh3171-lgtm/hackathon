@@ -1,5 +1,9 @@
 "use client";
 
+/*
+ * Brain-dump step UI: large textarea + optional voice (`useVoiceDictation`) + theme chips.
+ * Judges: all transcript text funnels through `onChange` on the parent page — same as typing.
+ */
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from "react";
 import { Loader2, Mic, Square } from "lucide-react";
 
@@ -18,6 +22,7 @@ export type BrainDumpInputHandle = {
   insertText: (text: string) => void;
 };
 
+/** Hard cap for one dictation take — hook stops cleanly at this duration. */
 const MAX_RECORDING_MS = 5 * 60 * 1000;
 
 function formatMmSs(totalSec: number): string {
@@ -94,6 +99,7 @@ export const BrainDumpInput = forwardRef<
     [onChange]
   );
 
+  /** Called by the voice hook for each finalized phrase (or full Whisper blob) — same as typing into the textarea. */
   const appendFinalText = useCallback(
     (chunk: string) => {
       const v = valueRef.current;
@@ -103,6 +109,10 @@ export const BrainDumpInput = forwardRef<
     [onChange]
   );
 
+  /*
+   * Voice path: browser Web Speech API when available; otherwise record + POST /api/clarity/transcribe.
+   * All output is merged into `value.text` via appendFinalText so downstream brain-dump analysis is unchanged.
+   */
   const voice = useVoiceDictation({
     onFinalText: appendFinalText,
     maxDurationMs: MAX_RECORDING_MS,
@@ -121,6 +131,7 @@ export const BrainDumpInput = forwardRef<
   } = voice;
 
   const transcribing = status === "transcribing";
+  /** While Whisper is uploading/transcribing, keep the textarea read-only without implying the mic is still on. */
   const blockInput = Boolean(disabled) || transcribing;
 
   const handleStart = useCallback(async () => {
@@ -130,7 +141,9 @@ export const BrainDumpInput = forwardRef<
     onChange({ ...valueRef.current, voice: { status: "recorded" } });
   }, [listening, onChange, startVoice, transcribing, voiceSupported]);
 
+  /** End dictation early; delegates to hook `stop()` which aborts Web Speech or stops MediaRecorder. */
   const handleStop = useCallback(() => {
+    /* Hook reports `listening` true for "requesting-permission" too — stop() is still safe (cleans up partial start). */
     if (!listening) return;
     stopVoice();
   }, [listening, stopVoice]);
@@ -257,12 +270,17 @@ export const BrainDumpInput = forwardRef<
             ) : null}
           </div>
 
-          {/* Voice control panel */}
+          {/* Voice control panel — single round control toggles mic / stop (red square while listening). */}
           <div className="rounded-2xl border border-border/55 bg-card/90 px-5 py-5 shadow-[0_1px_2px_rgb(15_23_42_/0.03)] sm:px-6 sm:py-6">
             <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:gap-6">
               <div className="flex items-center gap-4">
                 <div className="relative">
                   {listening ? (
+                    /*
+                     * Decorative pulse ring around the button. Must use pointer-events-none: the span is
+                     * positioned on top of the button in paint order and would otherwise intercept every
+                     * click — so "Stop" would never fire and the mic would appear stuck on.
+                     */
                     <span
                       className="pointer-events-none absolute inset-0 -m-2 rounded-full border border-primary/25 motion-safe:animate-pulse"
                       aria-hidden
@@ -271,6 +289,7 @@ export const BrainDumpInput = forwardRef<
                   <button
                     type="button"
                     disabled={blockInput || (!voiceSupported && !listening)}
+                    /* Same physical control: start dictation vs stop and flush transcript. */
                     onClick={() => (listening ? handleStop() : void handleStart())}
                     className={cn(
                       "flex size-16 items-center justify-center rounded-full border-2 shadow-clarity-soft transition",

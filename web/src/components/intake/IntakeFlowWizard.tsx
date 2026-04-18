@@ -1,5 +1,9 @@
 "use client";
 
+/*
+ * Full intake wizard: renders only “due” steps from `computeDueIntakeStepIndices` (adaptive after brain dump).
+ * Judges: writes answers to `session.intake` via `setSession`; advances `intake.intakeFlowStep` cursor.
+ */
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 

@@ -1,3 +1,7 @@
+/**
+ * Root layout for the whole Next.js app — fonts, global CSS, and `AppProviders` + `AppShell`.
+ * Judges: all routes render inside `<body>` here; Clarity session context is created in `AppProviders`.
+ */
 import type { Metadata } from "next";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";

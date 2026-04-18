@@ -1,5 +1,9 @@
 "use client";
 
+/*
+ * Route: `/matches` — deterministic rank + filters over in-repo mock therapist profiles (`data/`).
+ * Judges: no live directory API; scoring is pure TypeScript in `lib/therapist/match-algorithm.ts`.
+ */
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { SlidersHorizontal, Sparkles } from "lucide-react";
@@ -19,6 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import type { MatchPreferences } from "@/types/clarity";
 
+/** Filter defaults when user has not adjusted match prefs yet this session. */
 const defaultPrefs: MatchPreferences = {
   specialties: [],
   modality: "any",

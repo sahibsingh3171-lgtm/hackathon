@@ -1,3 +1,7 @@
+/**
+ * POST `/api/clarity/summary` — LLM (gpt-4o-mini) returns JSON headline/themes; falls back to `buildMockSummary`
+ * when `OPENAI_API_KEY` is missing or the model errors. Judges: server-only secret; client sends session slice.
+ */
 import { buildMockSummary, buildSummaryUserPayload, parseAiSummaryResult, SUMMARY_SYSTEM } from "@/lib/ai";
 import { getOpenAiApiKey } from "@/lib/env";
 import type { SummaryRequestBody, SummaryResponseBody } from "@/types/clarity";

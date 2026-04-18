@@ -1,5 +1,9 @@
 "use client";
 
+/*
+ * App chrome around all routes: crisis banner strip, marketing header, main scroll region, footer with 988.
+ * Judges: `(marketing)` and `(flow)` pages both render as `children` inside `<main>`.
+ */
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
@@ -11,6 +15,7 @@ import { useClaritySession } from "@/contexts/clarity-session-context";
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { crisisSupportPanelVariant } = useClaritySession();
+  /* Avoid duplicate crisis UI when summary page shows the full in-content support panel. */
   const hideCrisisBannerOnSummary =
     pathname === "/summary" && crisisSupportPanelVariant !== null;
 

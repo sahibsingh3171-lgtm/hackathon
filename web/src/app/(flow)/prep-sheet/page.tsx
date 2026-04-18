@@ -1,5 +1,8 @@
 "use client";
 
+/*
+ * Route: `/prep-sheet` — printable one-pager from `buildPrepSheet(session)`; no separate DB row.
+ */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";

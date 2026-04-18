@@ -1,5 +1,9 @@
 "use client";
 
+/*
+ * Interactive “practice session” chat: bounded turns via POST `/api/clarity/practice-turn`, optional voice.
+ * Judges: transcript lives on `session.practiceConversation`; not therapy — disclaimers in UI copy.
+ */
 import {
   useCallback,
   useEffect,

@@ -1,5 +1,9 @@
 "use client";
 
+/*
+ * Route: `/practice-session` — bounded rehearsal after matches: interactive chat (`PracticeChat`) or
+ * static prompt cards (`PracticeSessionPanel`); optional link back to matches in footer.
+ */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";

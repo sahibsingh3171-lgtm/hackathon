@@ -1,3 +1,7 @@
+/**
+ * POST `/api/clarity/practice-turn` — one turn of the bounded “practice rehearsal” chat; crisis text check
+ * before model; JSON in/out; mock path when no API key.
+ */
 import { buildPracticeTurnMock } from "@/lib/ai/practice-session-mock";
 import {
   buildPracticeTurnUserPayload,

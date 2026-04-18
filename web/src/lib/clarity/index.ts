@@ -1,9 +1,10 @@
 /**
- * Clarity domain helpers: flow constants, session persistence, intake copy,
- * crisis heuristics, prep sheet, next-step templates. AI + matching live under
- * `lib/ai` and `lib/therapist`; mock rows under `data/`.
+ * Barrel re-exports for Clarity domain logic (constants, intake, prep, crisis, demo session, etc.).
  *
- * **Session state:** `contexts/clarity-session-context` (in-memory per tab refresh; demo one-shot only).
+ * Judges:
+ * - **Session state** lives in `contexts/clarity-session-context` (in-memory; refresh clears; demo one-shot only).
+ * - **AI prompts + parsers** live under `src/lib/ai/` (not all re-exported here).
+ * - **Therapist ranking** lives under `src/lib/therapist/`; **mock rows** under `src/data/`.
  */
 
 export { FLOW_STEPS, stepIndexForPath } from "./constants";

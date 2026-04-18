@@ -1,3 +1,7 @@
+/**
+ * POST `/api/clarity/transcribe` — Whisper fallback for brain-dump voice when Web Speech API is unavailable.
+ * Multipart `audio` field; never persists audio on disk in this handler.
+ */
 import { getOpenAiApiKey } from "@/lib/env";
 
 export const runtime = "nodejs";

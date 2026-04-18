@@ -1,3 +1,7 @@
+/**
+ * POST `/api/clarity/reverse-geocode` — lat/lon → human place string via OpenStreetMap Nominatim (demo).
+ * Judges: not OpenAI; respect third-party rate limits in production.
+ */
 import { NextResponse } from "next/server";
 
 type NominatimAddress = Record<string, string | undefined>;

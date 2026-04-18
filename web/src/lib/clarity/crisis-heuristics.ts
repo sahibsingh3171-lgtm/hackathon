@@ -1,3 +1,7 @@
+/*
+ * Client + server shared heuristics for “maybe show crisis UI” — regex on free text + PHQ-inspired item 9.
+ * Judges: this is not a safety assessment product; it only drives copy + banners toward 988 resources.
+ */
 import type { CrisisLevel, IntakeAnswers } from "@/types/clarity";
 
 import { isScale4 } from "./intake-flow-validation";

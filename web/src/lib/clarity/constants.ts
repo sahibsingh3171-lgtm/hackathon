@@ -15,8 +15,10 @@
  * `StepShell` reads `FLOW_STEPS` for progress only.
  */
 
+/** Legacy key name — kept for docs / future persistence; not actively used while load/save are no-ops. */
 export const CLARITY_STORAGE_KEY = "clarity_session_v1";
 
+/** Ordered URLs for the in-app wizard; `StepShell` uses this for progress dots only. */
 export const FLOW_STEPS = [
   { path: "/brain-dump", label: "Your words", short: "1" },
   { path: "/intake", label: "Check-in", short: "2" },
@@ -30,6 +32,7 @@ export const FLOW_STEPS = [
 
 export type FlowPath = (typeof FLOW_STEPS)[number]["path"];
 
+/** Maps a pathname to 0-based index into `FLOW_STEPS` (defaults to 0 if unknown). */
 export function stepIndexForPath(path: string): number {
   const i = FLOW_STEPS.findIndex((s) => s.path === path);
   return i === -1 ? 0 : i;

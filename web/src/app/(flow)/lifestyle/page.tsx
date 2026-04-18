@@ -1,5 +1,9 @@
 "use client";
 
+/*
+ * Route: `/lifestyle` — self-reported mood/sleep/stress/screen snapshot; saved to `session.lifestyle`
+ * and later sent with intake + brain dump to summary + readiness API routes.
+ */
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -8,6 +12,7 @@ import { StepShell } from "@/components/clarity/StepShell";
 import { useClaritySession } from "@/contexts/clarity-session-context";
 import type { LifestyleSnapshot } from "@/types/clarity";
 
+/** Sensible defaults when user has not visited this step before in this session. */
 function defaultLifestyle(): LifestyleSnapshot {
   return {
     mood: 3,

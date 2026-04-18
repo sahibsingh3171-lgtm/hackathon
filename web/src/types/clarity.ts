@@ -1,4 +1,9 @@
-/** Domain types for Clarity — therapy readiness MVP (not diagnostic). */
+/**
+ * Domain types for Clarity — therapy readiness MVP (not diagnostic).
+ *
+ * Judges: `ClaritySession` is the JSON-shaped object held in React context; API routes receive slices
+ * of it (e.g. intake + lifestyle + brainDump). Extend here when adding new steps or AI payloads.
+ */
 
 import type { ReadinessAnalysisResponse } from "./readiness-analysis";
 

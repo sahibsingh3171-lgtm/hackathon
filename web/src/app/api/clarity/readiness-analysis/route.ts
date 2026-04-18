@@ -1,3 +1,7 @@
+/**
+ * POST `/api/clarity/readiness-analysis` — structured “readiness” JSON + Zod parse; then merges heuristic crisis
+ * flags. Called in parallel with summary from the summary page.
+ */
 import { augmentReadinessAnalysisWithCrisisHeuristics } from "@/lib/ai/readiness-analysis-crisis";
 import { buildReadinessAnalysisMock } from "@/lib/ai/readiness-analysis-mock";
 import {

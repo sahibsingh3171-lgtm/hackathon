@@ -1,5 +1,8 @@
 "use client";
 
+/*
+ * Route: `/next-steps` — closing checklist; `buildNextSteps` runs once from summary tags if missing.
+ */
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 

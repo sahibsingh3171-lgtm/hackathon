@@ -487,6 +487,10 @@ function scoreReviews(p: MockTherapistProfile): ReviewEvidence {
   };
 }
 
+/**
+ * **Hard filter** for the matches list: incompatible modality rows are dropped before scoring.
+ * (Other prefs mostly affect scores, not inclusion — see `rankTherapistMatches`.)
+ */
 function modalityHardOk(p: MockTherapistProfile, modality: ModalityFilter): boolean {
   if (modality === "any") return true;
   if (modality === "telehealth") return p.telehealth;

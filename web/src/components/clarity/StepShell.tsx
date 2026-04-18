@@ -1,5 +1,9 @@
 "use client";
 
+/*
+ * Shared chrome for every numbered flow step: title, subtitle, progress bar from `FLOW_STEPS`,
+ * Back / Continue buttons, optional `footerAside` (e.g. “Browse matches”).
+ */
 import type { ReactNode } from "react";
 import Link from "next/link";
 

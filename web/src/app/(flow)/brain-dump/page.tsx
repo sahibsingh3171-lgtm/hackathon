@@ -1,5 +1,9 @@
 "use client";
 
+/*
+ * Route: `/brain-dump` — optional free text + voice; can POST to `/api/clarity/intake-from-brain-dump`
+ * to pre-fill intake and shorten the wizard. Skip path clears shortcuts and sends user to full intake.
+ */
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 
@@ -19,6 +23,7 @@ import type { BrainDump, IntakeAnswers, IntakeExtractionMeta } from "@/types/cla
 
 const empty: BrainDump = { text: "", themes: [], voice: { status: "skipped" } };
 
+/** Shape of JSON returned by `POST /api/clarity/intake-from-brain-dump` (OpenAI or mock). */
 type ExtractResponse = {
   intakePatch?: Partial<IntakeAnswers>;
   prefilledStepIds?: string[];

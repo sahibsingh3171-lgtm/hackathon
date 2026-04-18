@@ -1,3 +1,7 @@
+/**
+ * POST `/api/clarity/intake-from-brain-dump` — maps free-text brain dump onto existing intake fields and
+ * returns which wizard step ids still need confirmation (`stillNeededStepIds` / `prefilledStepIds`).
+ */
 import { finalizeBrainDumpCanonical } from "@/lib/ai/intake-extraction-canonical";
 import {
   type FullExtractionResult,

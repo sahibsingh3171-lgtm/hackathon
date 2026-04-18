@@ -1,5 +1,8 @@
 # Web app (`web/`)
 
+**→ Codebase map (features, APIs, traceability): [`docs/CODEMAP.md`](docs/CODEMAP.md)**  
+Folder labels: each major directory under `src/` has a short `README.md`.
+
 Next.js (App Router) frontend for the hackathon: **TypeScript**, **Tailwind CSS v4**, **shadcn/ui** (base-nova preset), and **Clarity** design tokens (Inter body, Fraunces headings, optional JetBrains Mono).
 
 ## Prerequisites
@@ -29,6 +32,8 @@ Edit marketing copy in `src/app/(marketing)/page.tsx`, the Clarity flow under `s
 - For future Supabase wiring, read public config via `src/lib/env.ts` (`getSupabasePublicConfig()` returns `null` if unset; use `assertSupabasePublicConfig()` only when the feature truly requires Supabase).
 
 ## Project layout (MVP)
+
+For a **judge-ready walkthrough** (brain dump → API → prompts → matching), see **[`docs/CODEMAP.md`](docs/CODEMAP.md)**.
 
 | Area | Path |
 |------|------|

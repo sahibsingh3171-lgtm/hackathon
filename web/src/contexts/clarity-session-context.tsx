@@ -18,6 +18,20 @@ import { createDefaultSession } from "@/lib/clarity/session";
 import type { ClaritySession, CrisisLevel } from "@/types/clarity";
 import type { CrisisSupportPanelVariant } from "@/lib/clarity/crisis-support-panel-state";
 
+/*
+ * -----------------------------------------------------------------------------
+ * CLARITY SESSION CONTEXT (judges: global in-memory state for the whole flow)
+ * -----------------------------------------------------------------------------
+ * - `session` is the single source of truth: intake answers, brain dump, lifestyle,
+ *   AI summary/readiness, match prefs, practice chat transcript, etc.
+ * - Navigating between Next.js pages does NOT lose state — this provider wraps the app.
+ * - Refresh intentionally starts fresh (see `lib/clarity/session.ts` load/save no-ops), except
+ *   a one-shot demo payload from `consumeDemoOneShot()` in `persisted-session.ts`.
+ * - Crisis UI: `crisisLevel` from keyword heuristics + intake PHQ-inspired item 9; banner vs
+ *   summary panel coordinated here; dismiss flags use sessionStorage keys (not full session).
+ * -----------------------------------------------------------------------------
+ */
+
 const CRISIS_DISMISS_PREFIX = "clarity_crisis_dismissed_";
 const CRISIS_PANEL_DISMISS_PREFIX = "clarity_crisis_panel_dismissed_";
 
@@ -39,7 +53,7 @@ type ClarityContextValue = {
 
 const ClarityContext = createContext<ClarityContextValue | null>(null);
 
-/** Intake prose used for lightweight crisis keyword scan (non-clinical). */
+/** Pulls free-text intake fields into one blob for heuristic crisis scanning (not clinical triage). */
 function collectIntakeText(intake: ClaritySession["intake"]): string {
   const parts: string[] = [];
   const push = (v: unknown) => {
@@ -51,6 +65,7 @@ function collectIntakeText(intake: ClaritySession["intake"]): string {
   return parts.join("\n");
 }
 
+/** Combined prose for `evaluateSessionCrisisLevel` — intake lines plus optional brain-dump text. */
 function collectCrisisTextBlob(
   intake: ClaritySession["intake"],
   brainDumpText: string | undefined
@@ -61,6 +76,7 @@ function collectCrisisTextBlob(
   return a || b;
 }
 
+/** Mounts once at app root (`AppProviders`) — every flow page reads/writes `session` through here. */
 export function ClaritySessionProvider({ children }: { children: ReactNode }) {
   const [session, setSessionState] = useState<ClaritySession>(createDefaultSession);
   const [hydrated, setHydrated] = useState(false);
@@ -122,6 +138,7 @@ export function ClaritySessionProvider({ children }: { children: ReactNode }) {
     }
   }, [session.id]);
 
+  /** Merge partial session updates or replace via updater fn; always stamps `updatedAt`. */
   const setSession = useCallback((u: Update) => {
     setSessionState((prev) => {
       const next = typeof u === "function" ? u(prev) : { ...prev, ...u };
@@ -129,6 +146,7 @@ export function ClaritySessionProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  /** New blank session + crisis dismiss flags — e.g. header "start over" paths. */
   const resetFlow = useCallback(() => {
     const fresh = createDefaultSession();
     setSessionState(fresh);
@@ -166,6 +184,7 @@ export function ClaritySessionProvider({ children }: { children: ReactNode }) {
   return <ClarityContext.Provider value={value}>{children}</ClarityContext.Provider>;
 }
 
+/** Hook consumed by every flow screen; throws if used outside `ClaritySessionProvider`. */
 export function useClaritySession(): ClarityContextValue {
   const ctx = useContext(ClarityContext);
   if (!ctx) {

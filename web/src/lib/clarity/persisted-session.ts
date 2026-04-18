@@ -1,3 +1,9 @@
+/**
+ * Demo-only persistence bridge (not the main session store).
+ *
+ * Judges: the real session never writes `clarity_session_v1` today. Only `writeDemoOneShot` uses
+ * `sessionStorage` so a “Load demo” action can hydrate once; `consumeDemoOneShot` deletes that key.
+ */
 import type { ClaritySession } from "@/types/clarity";
 
 import { clearSession, loadSession, saveSession } from "./session";

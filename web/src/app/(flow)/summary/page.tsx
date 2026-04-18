@@ -1,5 +1,9 @@
 "use client";
 
+/*
+ * Route: `/summary` — first visit triggers parallel `fetch` to `/api/clarity/summary` and
+ * `/api/clarity/readiness-analysis`; results stored on `session` and shown in `AnalysisResultsView`.
+ */
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 

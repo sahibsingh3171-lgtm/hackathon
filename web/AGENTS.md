@@ -4,6 +4,11 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+## Codebase map (navigation for demos)
+
+- **Primary:** [`docs/CODEMAP.md`](docs/CODEMAP.md) — feature → UI → Route Handler → `lib/` → data.
+- **Folder labels:** `src/**/README.md` — what each directory is for (e.g. `app/api` = Next.js server, OpenAI key safe).
+
 ## Hackathon build principles (this repo)
 
 - **Simplest explainable code** — Prefer the smallest number of files, patterns, and dependencies that still behave well. A teammate (or a judge) should be able to follow the flow without a map.

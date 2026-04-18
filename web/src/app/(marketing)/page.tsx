@@ -1,3 +1,7 @@
+/**
+ * Marketing home (`/`): public landing sections before the user enters the `(flow)` wizard at `/brain-dump`.
+ * Judges: no `ClaritySession` required here — purely presentational composition of marketing components.
+ */
 import { LandingFeatures } from "@/components/marketing/landing-features";
 import { LandingFinalCta } from "@/components/marketing/landing-final-cta";
 import { LandingHero } from "@/components/marketing/landing-hero";

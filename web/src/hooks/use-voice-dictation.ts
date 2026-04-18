@@ -263,6 +263,7 @@ export function useVoiceDictation({
       } catch {
         /* ignore */
       }
+      /* `mr.onstop` runs next: stops tracks, then may POST audio for Whisper — leave state transitions there. */
       return;
     }
 
@@ -494,6 +495,7 @@ export function useVoiceDictation({
   }, [clearTimers]);
 
   const supported = engine === "web-speech" || engine === "whisper-fallback";
+  /** Mic session is "active" for UI from permission prompt through live capture (both engines). */
   const listening = status === "listening" || status === "requesting-permission";
 
   return {
