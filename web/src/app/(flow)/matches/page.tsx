@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { SlidersHorizontal, Sparkles } from "lucide-react";
 
 import { MatchFilters } from "@/components/clarity/MatchFilters";
 import { MatchTherapistCard } from "@/components/clarity/MatchTherapistCard";
@@ -10,12 +11,12 @@ import { useClaritySession } from "@/contexts/clarity-session-context";
 import { MOCK_THERAPIST_PROFILES } from "@/data/mock-therapist-profiles";
 import {
   buildTherapistMatchInput,
+  highlightCuratedMatches,
   rankTherapistMatches,
   sortRankedTherapistMatches,
   type TherapistMatchSortMode,
 } from "@/lib/therapist";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import type { MatchPreferences } from "@/types/clarity";
 
 const defaultPrefs: MatchPreferences = {
@@ -24,7 +25,8 @@ const defaultPrefs: MatchPreferences = {
   insurance: [],
 };
 
-const INITIAL_VISIBLE = 8;
+const FEATURED_COUNT = 3;
+const INITIAL_MORE_VISIBLE = 5;
 
 export default function MatchesPage() {
   const router = useRouter();
@@ -33,10 +35,10 @@ export default function MatchesPage() {
     () => session.matchPreferences ?? defaultPrefs
   );
   const [sortMode, setSortMode] = useState<TherapistMatchSortMode>("recommended");
-  const [showAll, setShowAll] = useState(false);
+  const [showAllMore, setShowAllMore] = useState(false);
 
-  const ranked = useMemo(() => {
-    const input = buildTherapistMatchInput(
+  const { input, ranked } = useMemo(() => {
+    const inp = buildTherapistMatchInput(
       {
         intake: session.intake,
         summary: session.summary,
@@ -44,153 +46,294 @@ export default function MatchesPage() {
       },
       prefs
     );
-    return rankTherapistMatches(input, MOCK_THERAPIST_PROFILES);
+    const r = rankTherapistMatches(inp, MOCK_THERAPIST_PROFILES);
+    highlightCuratedMatches(r, inp);
+    return { input: inp, ranked: r };
   }, [prefs, session.intake, session.summary, session.readinessAnalysis]);
 
-  const sorted = useMemo(() => sortRankedTherapistMatches(ranked, sortMode), [ranked, sortMode]);
+  const sorted = useMemo(
+    () => sortRankedTherapistMatches(ranked, sortMode),
+    [ranked, sortMode]
+  );
 
-  const visible = showAll ? sorted : sorted.slice(0, INITIAL_VISIBLE);
-  const hiddenCount = Math.max(0, sorted.length - visible.length);
+  // Top picks: when sort is recommended, use first N from ranked (still carrying highlights).
+  const showTopPicks = sortMode === "recommended" && sorted.length > FEATURED_COUNT;
+  const topPicks = showTopPicks ? sorted.slice(0, FEATURED_COUNT) : [];
+  const rest = showTopPicks ? sorted.slice(FEATURED_COUNT) : sorted;
+
+  const visibleRest = showAllMore ? rest : rest.slice(0, INITIAL_MORE_VISIBLE);
+  const hiddenMore = Math.max(0, rest.length - visibleRest.length);
+
+  // Summary strip derived from inputs — gives users a sense the app heard them.
+  const summaryChips: string[] = [];
+  if (input.specialtyConcerns[0]) summaryChips.push(`Around ${input.specialtyConcerns[0]}`);
+  if (input.modality !== "any") {
+    summaryChips.push(input.modality === "telehealth" ? "Telehealth" : "In person");
+  }
+  if (input.maxBudgetUsd) summaryChips.push(`≤ $${input.maxBudgetUsd}`);
+  if (input.identityFocus[0]) summaryChips.push(input.identityFocus[0]);
+  if (input.styleTags[0]) summaryChips.push(`${input.styleTags[0]} style`);
+  if (input.locationPreference) summaryChips.push(`Near ${input.locationPreference}`);
 
   return (
     <StepShell
       path="/matches"
-      title="Sample matches"
-      subtitle="A short list ordered from what you shared — demo data only, not a real directory or a promise of the right fit."
+      title="Your shortlist"
+      subtitle="Sample matches ordered from what you shared — not a real directory or a promise of fit."
       onBack={() => router.push("/summary")}
-      onNext={() => router.push("/prep-sheet")}
-      nextLabel="Prep sheet"
+      onNext={() => router.push("/practice-session")}
+      nextLabel="Practice session"
       showNext
-      maxWidthClass="max-w-4xl"
+      maxWidthClass="max-w-5xl"
       calmProgress
     >
       <div className="space-y-12 sm:space-y-14">
+        {/* Signal strip — shows the app heard the user */}
         <section
-          className="rounded-3xl border border-border/45 bg-card px-7 py-8 shadow-sm ring-1 ring-foreground/[0.02] sm:px-9 sm:py-9"
-          aria-labelledby="how-match-heading"
+          aria-label="Matching signals"
+          className="rounded-[1.5rem] border border-border/50 bg-gradient-to-br from-card via-card to-muted/25 px-7 py-6 shadow-[0_1px_2px_rgb(15_23_42_/0.035)] sm:px-9 sm:py-7"
         >
-          <h2
-            id="how-match-heading"
-            className="font-heading text-lg font-semibold tracking-tight text-foreground sm:text-xl"
-          >
-            How we ordered this list
-          </h2>
-          <ol className="mt-5 list-decimal space-y-3.5 pl-5 text-sm leading-relaxed text-muted-foreground marker:text-primary/70">
-            <li>
-              <span className="text-foreground">Themes and language</span> — we look for overlap
-              between what you shared (including suggested focus areas) and each profile&apos;s
-              specialties and story.
-            </li>
-            <li>
-              <span className="text-foreground">How and where you meet</span> — telehealth or
-              in-person preference, plus optional location text, gently nudge the order.
-            </li>
-            <li>
-              <span className="text-foreground">Cost and coverage</span> — budget and insurance tags
-              matter, but they do not remove people from the list except when modality truly
-              cannot work.
-            </li>
-            <li>
-              <span className="text-foreground">Sample ratings</span> — mock reviews help break
-              ties after the above.
-            </li>
-          </ol>
-          <p className="mt-5 text-xs leading-relaxed text-muted-foreground">
-            For a technical view of weights, see{" "}
-            <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.7rem]">
-              THERAPIST_MATCH_SCORING
-            </code>{" "}
-            in the codebase.
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-[0.625rem] font-semibold uppercase tracking-[0.22em] text-muted-foreground/90">
+                Matching signals
+              </p>
+              <p className="mt-1.5 text-[0.9375rem] leading-snug text-foreground">
+                {summaryChips.length
+                  ? `We are ranking around ${summaryChips.length} signal${summaryChips.length === 1 ? "" : "s"} from your check-in.`
+                  : "We are using a wide view from your check-in — try a filter to narrow it."}
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              <span className="font-semibold text-foreground">{sorted.length}</span>{" "}
+              {sorted.length === 1 ? "profile" : "profiles"} · demo data
+            </p>
+          </div>
+          {summaryChips.length ? (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {summaryChips.map((chip) => (
+                <span
+                  key={chip}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/8 px-3 py-1 text-[0.75rem] font-medium text-primary"
+                >
+                  <Sparkles className="size-3 opacity-70" aria-hidden />
+                  {chip}
+                </span>
+              ))}
+            </div>
+          ) : null}
         </section>
 
+        {/* Filters */}
         <MatchFilters
           value={prefs}
           onChange={(next) => {
             setPrefs(next);
             setSession({ matchPreferences: next });
           }}
+          resultCount={sorted.length}
         />
 
-        <div className="flex flex-col gap-5 border-t border-border/45 pt-8 sm:flex-row sm:items-end sm:justify-between">
-          <div className="space-y-2">
-            <Label htmlFor="match-sort" className="text-foreground">
-              Sort list by
-            </Label>
+        {!prefs.locationPreference?.trim() ? (
+          <p className="text-[0.75rem] leading-relaxed text-muted-foreground">
+            <span className="font-medium text-foreground/85">Location tip:</span> add a city or region, or use
+            {" "}
+            “Approximate my area” in filters, to unlock sample lines on each card for how reviewers
+            describe the therapist (demo data only).
+          </p>
+        ) : null}
+
+        {/* Sort + count row */}
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border/45 pt-7">
+          <div className="flex items-center gap-3">
+            <SlidersHorizontal className="size-4 text-muted-foreground" aria-hidden />
+            <label
+              htmlFor="match-sort"
+              className="text-[0.8125rem] font-medium text-foreground/85"
+            >
+              Order by
+            </label>
             <select
               id="match-sort"
-              className="h-11 w-full max-w-xs rounded-xl border border-border bg-muted/30 px-3 text-sm text-foreground shadow-sm"
+              className="h-10 rounded-full border border-border/60 bg-background px-4 pr-8 text-[0.8125rem] font-medium text-foreground shadow-[0_1px_2px_rgb(15_23_42_/0.03)] transition focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
               value={sortMode}
               onChange={(e) => setSortMode(e.target.value as TherapistMatchSortMode)}
             >
-              <option value="recommended">Suggested order</option>
-              <option value="fee_asc">Lower typical fee first</option>
-              <option value="rating_desc">Higher sample rating</option>
-              <option value="reviews_desc">More sample reviews</option>
+              <option value="recommended">Best fit for you</option>
+              <option value="fee_asc">Lower fee first</option>
+              <option value="rating_desc">Higher rating</option>
+              <option value="reviews_desc">More reviews</option>
             </select>
           </div>
-          <p className="text-sm text-muted-foreground">
-            {sorted.length} profile{sorted.length === 1 ? "" : "s"} with current filters
-            {sortMode !== "recommended" ? " · order changed for browsing" : ""}
-          </p>
+          {sortMode !== "recommended" ? (
+            <p className="text-xs text-muted-foreground">
+              Order changed for browsing — curated picks hidden.
+            </p>
+          ) : null}
         </div>
 
         {sorted.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-border/60 bg-muted/15 px-8 py-16 text-center">
-            <p className="font-heading text-lg text-foreground">No one left with these filters</p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Try widening modality, budget, or insurance — the sample list is intentionally small.
+          <div className="rounded-[1.75rem] border border-dashed border-border/60 bg-muted/[0.12] px-8 py-20 text-center">
+            <p className="font-heading text-xl font-semibold tracking-[-0.01em] text-foreground">
+              No profiles left with these filters
             </p>
-          </div>
-        ) : (
-          <ul className="space-y-8 sm:space-y-10">
-            {visible.map((match) => (
-              <li key={match.profile.id}>
-                <MatchTherapistCard match={match} />
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {hiddenCount > 0 ? (
-          <div className="flex flex-col items-center gap-3 border-t border-border/60 pt-8 text-center">
-            <p className="max-w-md text-sm text-muted-foreground">
-              Showing the first {INITIAL_VISIBLE} to keep the page light. {hiddenCount} more are
-              available when you expand.
+            <p className="mt-3 mx-auto max-w-md text-[0.9375rem] leading-relaxed text-muted-foreground">
+              Try widening modality, raising the budget cap, or removing an identity / style chip —
+              the sample list is intentionally small.
             </p>
             <Button
               type="button"
               variant="outline"
-              className="rounded-2xl border-border px-6"
-              onClick={() => setShowAll(true)}
+              className="mt-7 rounded-full border-border/70 px-5"
+              onClick={() => {
+                setPrefs(defaultPrefs);
+                setSession({ matchPreferences: defaultPrefs });
+              }}
             >
-              Show all {sorted.length} profiles
+              Reset filters
             </Button>
           </div>
-        ) : sorted.length > INITIAL_VISIBLE ? (
-          <div className="flex justify-center border-t border-border/60 pt-8">
-            <Button
-              type="button"
-              variant="ghost"
-              className="text-muted-foreground"
-              onClick={() => setShowAll(false)}
-            >
-              Show fewer
-            </Button>
+        ) : (
+          <div className="space-y-14 sm:space-y-16">
+            {/* Top picks */}
+            {topPicks.length ? (
+              <section aria-labelledby="top-picks-heading" className="space-y-6 sm:space-y-8">
+                <div className="flex items-end justify-between gap-4">
+                  <div>
+                    <p className="text-[0.625rem] font-semibold uppercase tracking-[0.22em] text-muted-foreground/90">
+                      Curated
+                    </p>
+                    <h2
+                      id="top-picks-heading"
+                      className="mt-2 font-heading text-[1.5rem] font-semibold tracking-[-0.02em] text-foreground sm:text-[1.75rem]"
+                    >
+                      Top picks for you
+                    </h2>
+                    <p className="mt-2 max-w-xl text-[0.9375rem] leading-relaxed text-muted-foreground">
+                      The strongest alignment across themes, style, modality, and practical fit —
+                      each with a reason it rose.
+                    </p>
+                  </div>
+                </div>
+                <ul className="space-y-8">
+                  {topPicks.map((match, idx) => (
+                    <li key={match.profile.id}>
+                      <MatchTherapistCard
+                        match={match}
+                        emphasis={idx === 0 ? "featured" : "default"}
+                        locationFilterText={prefs.locationPreference}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+
+            {/* More options */}
+            {rest.length ? (
+              <section aria-labelledby="more-heading" className="space-y-6 sm:space-y-8">
+                <div className="flex items-end justify-between gap-4">
+                  <div>
+                    <p className="text-[0.625rem] font-semibold uppercase tracking-[0.22em] text-muted-foreground/90">
+                      {showTopPicks ? "Also worth a look" : "Results"}
+                    </p>
+                    <h2
+                      id="more-heading"
+                      className="mt-2 font-heading text-[1.25rem] font-semibold tracking-[-0.02em] text-foreground sm:text-[1.375rem]"
+                    >
+                      {showTopPicks ? "More options" : "Matches"}
+                    </h2>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Showing {visibleRest.length} of {rest.length}
+                  </p>
+                </div>
+                <ul className="space-y-6 sm:space-y-7">
+                  {visibleRest.map((match) => (
+                    <li key={match.profile.id}>
+                      <MatchTherapistCard
+                        match={match}
+                        locationFilterText={prefs.locationPreference}
+                      />
+                    </li>
+                  ))}
+                </ul>
+
+                {hiddenMore > 0 ? (
+                  <div className="flex justify-center pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full border-border/70 px-6"
+                      onClick={() => setShowAllMore(true)}
+                    >
+                      Show {hiddenMore} more
+                    </Button>
+                  </div>
+                ) : rest.length > INITIAL_MORE_VISIBLE ? (
+                  <div className="flex justify-center pt-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="rounded-full text-muted-foreground"
+                      onClick={() => setShowAllMore(false)}
+                    >
+                      Show fewer
+                    </Button>
+                  </div>
+                ) : null}
+              </section>
+            ) : null}
           </div>
-        ) : null}
+        )}
+
+        {/* How we ordered — collapsed, quieter */}
+        <details className="group rounded-[1.5rem] border border-border/45 bg-card/80 px-7 py-5 shadow-[0_1px_2px_rgb(15_23_42_/0.03)] sm:px-9">
+          <summary className="flex cursor-pointer items-center justify-between gap-3 text-[0.875rem] font-medium text-foreground/85 transition hover:text-foreground [&::-webkit-details-marker]:hidden">
+            <span>How we ordered this list</span>
+            <span className="text-xs text-muted-foreground transition group-open:rotate-180">⌄</span>
+          </summary>
+          <ol className="mt-5 list-decimal space-y-3 pl-5 text-[0.875rem] leading-relaxed text-muted-foreground marker:text-primary/70">
+            <li>
+              <span className="text-foreground">Themes & language</span> — overlap between what you
+              shared (including AI traits and focus tags) and each profile&apos;s specialties.
+            </li>
+            <li>
+              <span className="text-foreground">Identity, style, approach</span> — cultural lens,
+              session feel (warm vs direct), and named methods like CBT, EMDR, IFS.
+            </li>
+            <li>
+              <span className="text-foreground">How & where you meet</span> — telehealth / in-person
+              preference and optional location text.
+            </li>
+            <li>
+              <span className="text-foreground">Cost & coverage</span> — budget, insurance, and
+              sliding-scale signals nudge order (never hide).
+            </li>
+            <li>
+              <span className="text-foreground">Review quality</span> — sample rating and review
+              volume break ties after everything above.
+            </li>
+          </ol>
+          <p className="mt-4 text-[0.75rem] leading-relaxed text-muted-foreground">
+            Tuning lives in{" "}
+            <code className="rounded bg-muted/60 px-1.5 py-0.5 font-mono text-[0.7rem]">
+              THERAPIST_MATCH_SCORING
+            </code>{" "}
+            (hackathon MVP — no ML, deterministic).
+          </p>
+        </details>
 
         <footer
-          className="rounded-3xl border border-primary/15 bg-accent/25 px-7 py-7 text-sm leading-relaxed text-muted-foreground ring-1 ring-primary/5 sm:px-9 sm:py-8"
+          className="rounded-[1.5rem] border border-primary/15 bg-accent/25 px-7 py-6 text-[0.875rem] leading-relaxed text-muted-foreground ring-1 ring-primary/5 sm:px-9"
           role="note"
         >
-          <p className="font-medium text-foreground">Please read</p>
+          <p className="font-semibold text-foreground">Please read</p>
           <p className="mt-2">
             These are{" "}
             <span className="font-semibold text-foreground">starting points, not endorsements</span>
-            . Clarity does not check licenses, openings, or fit. Talk with real clinicians, ask
-            questions, and confirm fees and insurance yourself. Profiles and booking links here are
-            fictional.
+            . Clarity does not verify licenses, openings, or fit. Ask questions and confirm fees and
+            insurance yourself. Profiles and booking links here are fictional.
           </p>
         </footer>
       </div>

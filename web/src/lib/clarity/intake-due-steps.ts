@@ -2,16 +2,37 @@ import { INTAKE_FLOW_STEPS } from "./intake-flow-config";
 import { validateIntakeStep } from "./intake-flow-validation";
 import type { IntakeAnswers } from "@/types/clarity";
 
+/** Sort questionnaire step ids in canonical flow order; drop unknowns and duplicates. */
+export function sortStepIdsByFlow(ids: readonly string[]): string[] {
+  const order = new Map(INTAKE_FLOW_STEPS.map((s, i) => [s.id, i]));
+  const seen = new Set<string>();
+  return [...ids]
+    .filter((id) => {
+      if (!order.has(id) || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    })
+    .sort((a, b) => (order.get(a)! - order.get(b)!));
+}
+
 /**
- * Steps the user still needs in the intake wizard: invalid answers, or inferred
- * values they have not continued past yet (review/confirm).
+ * Indices into `INTAKE_FLOW_STEPS` for the wizard.
+ * When `intakeWizardStepIds` is set (brain-dump extraction path), only those screens appear.
+ * Otherwise: invalid answers, or prefilled values not yet continued past (classic path).
  */
 export function computeDueIntakeStepIndices(
   intake: IntakeAnswers,
-  inferredStepIds: readonly string[] | undefined,
-  confirmedStepIds: readonly string[] | undefined
+  prefilledStepIds: readonly string[] | undefined,
+  confirmedStepIds: readonly string[] | undefined,
+  wizardStepIds?: readonly string[] | null
 ): number[] {
-  const inferred = new Set(inferredStepIds ?? []);
+  if (wizardStepIds && wizardStepIds.length > 0) {
+    return sortStepIdsByFlow(wizardStepIds)
+      .map((id) => INTAKE_FLOW_STEPS.findIndex((s) => s.id === id))
+      .filter((i) => i >= 0);
+  }
+
+  const inferred = new Set(prefilledStepIds ?? []);
   const confirmed = new Set(confirmedStepIds ?? []);
   const out: number[] = [];
   for (let i = 0; i < INTAKE_FLOW_STEPS.length; i += 1) {

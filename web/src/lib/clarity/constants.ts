@@ -2,10 +2,11 @@
  * Linear flow for Clarity MVP (browser-only session).
  *
  * **Journey:** landing → brain dump (optional voice + text) → check-in (intake; may be shortened after
- * extraction) → daily rhythms → reflection (AI) → matches → prep sheet → next steps → home.
+ * extraction) → daily rhythms → reflection (AI) → matches → practice session (optional rehearsal) →
+ * prep sheet → next steps → home.
  *
- * **State:** `ClaritySession` in `sessionStorage` via `claritySessionPersistence`. Brain dump can prefill
- * intake; `intakeInferredStepIds` / `intakeConfirmedStepIds` drive which wizard screens still appear
+ * **State:** `ClaritySession` is in-memory only (refresh starts fresh). Brain dump can prefill
+ * intake; `intakePrefilledStepIds` / `intakeConfirmedStepIds` drive which wizard screens still appear
  * (see `computeDueIntakeStepIndices` in `intake-due-steps.ts`). `contexts/clarity-session-context` owns
  * hydration, crisis flags, and persistence side effects.
  *
@@ -22,8 +23,9 @@ export const FLOW_STEPS = [
   { path: "/lifestyle", label: "Daily rhythms", short: "3" },
   { path: "/summary", label: "Reflection", short: "4" },
   { path: "/matches", label: "Matches", short: "5" },
-  { path: "/prep-sheet", label: "Prep sheet", short: "6" },
-  { path: "/next-steps", label: "Closing", short: "7" },
+  { path: "/practice-session", label: "Practice", short: "6" },
+  { path: "/prep-sheet", label: "Prep sheet", short: "7" },
+  { path: "/next-steps", label: "Closing", short: "8" },
 ] as const;
 
 export type FlowPath = (typeof FLOW_STEPS)[number]["path"];

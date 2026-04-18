@@ -12,8 +12,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Clarity flow (MVP)
 
-**Route order** (see `src/lib/clarity/constants.ts` → `FLOW_STEPS`): `/brain-dump` → `/intake` → `/lifestyle` → `/summary` → `/matches` → `/prep-sheet` → `/next-steps`.
+**Route order** (see `src/lib/clarity/constants.ts` → `FLOW_STEPS`): `/brain-dump` → `/intake` → `/lifestyle` → `/summary` → `/matches` → `/practice-session` → `/prep-sheet` → `/next-steps`.
 
-**State** (`ClaritySession` in `src/types/clarity.ts`): `brainDump` is captured first. Optional `intakeInferredStepIds` / `intakeConfirmedStepIds` record which intake wizard screens were prefilled from `/api/clarity/intake-from-brain-dump` and which the user has already continued past. `intake.intakeFlowStep` is the **cursor into the “due” step list** (not a raw `INTAKE_FLOW_STEPS` index). Persistence: `src/lib/clarity/session.ts` + `claritySessionPersistence`.
+**State** (`ClaritySession` in `src/types/clarity.ts`): `brainDump` is captured first. Optional `intakePrefilledStepIds` / `intakeConfirmedStepIds` record which fields were prefilled from `/api/clarity/intake-from-brain-dump` and which prefilled screens the user has already continued past. `intake.intakeFlowStep` is the **cursor into the “due” step list** (not a raw `INTAKE_FLOW_STEPS` index). Persistence: `src/lib/clarity/session.ts` + `claritySessionPersistence`.
 
 **Responsibilities**: `BrainDumpInput` (typed text drives extraction; optional local voice note placeholder), brain-dump page (skip vs. continue + extraction call), `IntakeFlowWizard` (`computeDueIntakeStepIndices` — only invalid or unconfirmed inferred steps; first-screen “gentle read” card + calmer per-step draft copy), lifestyle + summary pages (navigation only). No conversational agent — one JSON extraction call and the existing one-screen-at-a-time wizard.

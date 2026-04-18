@@ -1,6 +1,4 @@
 import type { ClaritySession } from "@/types/clarity";
-import { CLARITY_STORAGE_KEY } from "./constants";
-import { buildNextSteps } from "./next-steps-templates";
 
 function newId(): string {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -15,8 +13,10 @@ export function createDefaultSession(): ClaritySession {
     id: newId(),
     updatedAt: now,
     intake: {},
-    intakeInferredStepIds: [],
+    intakePrefilledStepIds: [],
     intakeConfirmedStepIds: [],
+    intakeWizardStepIds: null,
+    intakeExtractionMeta: null,
     lifestyle: null,
     brainDump: null,
     summary: null,
@@ -27,44 +27,19 @@ export function createDefaultSession(): ClaritySession {
   };
 }
 
+/**
+ * Persistence is intentionally disabled for this build: refresh restarts the flow.
+ * These helpers are kept as stable no-ops so legacy callers (context, demo helpers)
+ * continue to compile and behave correctly when called.
+ */
 export function loadSession(): ClaritySession | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = sessionStorage.getItem(CLARITY_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as ClaritySession;
-    if (!parsed || typeof parsed !== "object" || !parsed.id) return null;
-    const base: ClaritySession = {
-      ...parsed,
-      readinessAnalysis: parsed.readinessAnalysis ?? null,
-      intakeInferredStepIds: parsed.intakeInferredStepIds ?? [],
-      intakeConfirmedStepIds: parsed.intakeConfirmedStepIds ?? [],
-    };
-    if (
-      base.summary &&
-      (!base.nextSteps || base.nextSteps.length === 0)
-    ) {
-      return { ...base, nextSteps: buildNextSteps(base.summary.tags) };
-    }
-    return base;
-  } catch {
-    return null;
-  }
+  return null;
 }
 
-export function saveSession(session: ClaritySession): void {
-  if (typeof window === "undefined") return;
-  try {
-    sessionStorage.setItem(
-      CLARITY_STORAGE_KEY,
-      JSON.stringify({ ...session, updatedAt: new Date().toISOString() })
-    );
-  } catch {
-    /* quota or private mode */
-  }
+export function saveSession(_session: ClaritySession): void {
+  void _session;
 }
 
 export function clearSession(): void {
-  if (typeof window === "undefined") return;
-  sessionStorage.removeItem(CLARITY_STORAGE_KEY);
+  /* no-op — nothing to clear when we never persist */
 }

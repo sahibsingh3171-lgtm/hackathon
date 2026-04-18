@@ -113,6 +113,30 @@ export interface TherapyPrepSheet {
   dontForgetInSession: string;
 }
 
+/**
+ * Lightweight “first session” rehearsal — prompts + suggested phrasing from the user’s own inputs.
+ * Not therapy and not an AI clinician; see `buildPracticeSession` copy and UI disclaimers.
+ */
+export interface PracticeSessionPromptBlock {
+  id: string;
+  /** Plain-language question a therapist might ask in a first meeting. */
+  question: string;
+  /** Short lines the user could try aloud; paraphrase freely — not a script. */
+  exampleLines: string[];
+}
+
+export interface PracticeSessionContent {
+  /** One calm line framing the whole page. */
+  intro: string;
+  /** Short banner text — practice only, not treatment. */
+  notTherapyBanner: string;
+  /** Supporting disclaimer (limits, no diagnosis). */
+  notTherapyBody: string;
+  /** If you freeze — simple openers. */
+  freezeStarters: string[];
+  prompts: PracticeSessionPromptBlock[];
+}
+
 export type ModalityFilter = "any" | "in_person" | "telehealth";
 
 export interface MatchPreferences {
@@ -122,7 +146,31 @@ export interface MatchPreferences {
   insurance: string[];
   /** Optional city, state, or region substring for soft location fit (mock matching). */
   locationPreference?: string;
+  /** Identity / cultural lenses the user wants their therapist fluent in (soft signal). */
+  identityFocus?: string[];
+  /** Session style the user is drawn to (e.g. Warm, Direct, Structured). */
+  styleTags?: string[];
+  /** High-level therapy approaches the user has heard of and is curious about. */
+  approaches?: string[];
+  /** Languages the user wants the session in (beyond English). */
+  languages?: string[];
+  /** Bias top of list toward lower fees when true (sliding scale / budget stretched). */
+  prioritizeAffordability?: boolean;
 }
+
+/** Rich output from brain-dump → intake extraction (non-diagnostic; supports UI + wizard filtering). */
+export type IntakeExtractionMeta = {
+  /** Model-estimated confidence 0–1 per questionnaire step id that received a value. */
+  fieldConfidence?: Record<string, number>;
+  /** Step ids the model considers satisfied without further screens (subset of all steps). */
+  answeredStepIds?: string[];
+  /** Short internal rationale (not shown as clinical fact). */
+  reasoningSummary?: string;
+  /** One calm line for the user (optional). */
+  trustLine?: string;
+  /** Free-form themes (e.g. sleep_disturbance, emptiness, self_minimizing) — not diagnoses. */
+  emotionalSignals?: string[];
+};
 
 export interface Therapist {
   id: string;
@@ -146,12 +194,19 @@ export interface ClaritySession {
   updatedAt: string;
   intake: IntakeAnswers;
   /**
-   * Intake wizard step ids prefilled from brain-dump extraction (`INTAKE_FLOW_STEPS[].id`).
-   * User reviews these (pre-valid) until they tap Continue, which appends to `intakeConfirmedStepIds`.
+   * Step ids whose fields were prefilled from the brain-dump extraction patch (for gentle read +
+   * “light draft” banners). Not the same as `intakeWizardStepIds` (screens still to show).
    */
-  intakeInferredStepIds?: string[];
-  /** Inferred step ids the user has continued past in the check-in wizard. */
+  intakePrefilledStepIds?: string[];
+  /** Prefilled step ids the user has continued past in the check-in wizard. */
   intakeConfirmedStepIds?: string[];
+  /**
+   * When set, the check-in wizard only shows these questionnaire step ids in flow order.
+   * Cleared on skip-brain-dump or reset. Null = classic full wizard.
+   */
+  intakeWizardStepIds?: string[] | null;
+  /** Latest extraction metadata (confidence, signals, summaries). */
+  intakeExtractionMeta?: IntakeExtractionMeta | null;
   lifestyle: LifestyleSnapshot | null;
   brainDump: BrainDump | null;
   summary: AiSummaryResult | null;

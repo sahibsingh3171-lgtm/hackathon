@@ -53,14 +53,17 @@ export function IntakeFlowWizard() {
   const [panelVisible, setPanelVisible] = useState(true);
 
   const intake = session.intake;
+  const wizardStepIds = session.intakeWizardStepIds;
+  const wizardMode = Array.isArray(wizardStepIds) && wizardStepIds.length > 0;
   const due = useMemo(
     () =>
       computeDueIntakeStepIndices(
         intake,
-        session.intakeInferredStepIds,
-        session.intakeConfirmedStepIds
+        session.intakePrefilledStepIds,
+        session.intakeConfirmedStepIds,
+        wizardStepIds
       ),
-    [intake, session.intakeInferredStepIds, session.intakeConfirmedStepIds]
+    [intake, session.intakePrefilledStepIds, session.intakeConfirmedStepIds, wizardStepIds]
   );
 
   const cursor = clampDueCursor(intake.intakeFlowStep, due.length);
@@ -69,9 +72,9 @@ export function IntakeFlowWizard() {
   const progressPct =
     due.length > 0 ? Math.round(((cursor + 1) / due.length) * 100) : 100;
   const validCurrent = step ? validateIntakeStep(stepIdx, intake) : false;
-  const inferredIds = session.intakeInferredStepIds ?? [];
-  const isSuggestedStep = step ? inferredIds.includes(step.id) : false;
-  const listenedFirst = inferredIds.length > 0;
+  const prefilledIds = session.intakePrefilledStepIds ?? [];
+  const isSuggestedStep = step ? prefilledIds.includes(step.id) : false;
+  const listenedFirst = wizardMode || prefilledIds.length > 0;
   const shorterPass = listenedFirst && due.length < INTAKE_FLOW_STEP_TOTAL;
 
   useEffect(() => {
@@ -85,8 +88,9 @@ export function IntakeFlowWizard() {
     if (!hydrated) return;
     const d = computeDueIntakeStepIndices(
       intake,
-      session.intakeInferredStepIds,
-      session.intakeConfirmedStepIds
+      session.intakePrefilledStepIds,
+      session.intakeConfirmedStepIds,
+      session.intakeWizardStepIds
     );
     if (d.length === 0) return;
     const c = clampDueCursor(intake.intakeFlowStep, d.length);
@@ -100,7 +104,8 @@ export function IntakeFlowWizard() {
     hydrated,
     intake,
     session.intakeConfirmedStepIds,
-    session.intakeInferredStepIds,
+    session.intakePrefilledStepIds,
+    session.intakeWizardStepIds,
     intake.intakeFlowStep,
     setSession,
   ]);
@@ -149,14 +154,18 @@ export function IntakeFlowWizard() {
       const prevIntake = prev.intake;
       const stepMeta = INTAKE_FLOW_STEPS[stepIdx];
       const confirmed = new Set(prev.intakeConfirmedStepIds ?? []);
-      if (stepMeta && (prev.intakeInferredStepIds ?? []).includes(stepMeta.id)) {
+      if (stepMeta && (prev.intakePrefilledStepIds ?? []).includes(stepMeta.id)) {
         confirmed.add(stepMeta.id);
       }
 
+      const prevWizard = prev.intakeWizardStepIds;
+      const useWizard = Array.isArray(prevWizard) && prevWizard.length > 0;
+
       const dueAfter = computeDueIntakeStepIndices(
         prevIntake,
-        prev.intakeInferredStepIds,
-        Array.from(confirmed)
+        prev.intakePrefilledStepIds,
+        Array.from(confirmed),
+        prevWizard
       );
 
       if (dueAfter.length === 0) {
@@ -165,8 +174,26 @@ export function IntakeFlowWizard() {
           ...prev,
           intake: patchIntake(prevIntake, { intakeFlowStep: 0 }),
           intakeConfirmedStepIds: Array.from(confirmed),
-          lifestyle: buildLifestyleFromIntake(prevIntake),
-          matchPreferences: buildMatchPreferencesFromIntake(prevIntake),
+          lifestyle: buildLifestyleFromIntake(intake),
+          matchPreferences: buildMatchPreferencesFromIntake(intake),
+        };
+      }
+
+      if (useWizard) {
+        if (cursor >= dueAfter.length - 1) {
+          queueMicrotask(() => router.push("/lifestyle"));
+          return {
+            ...prev,
+            intake: patchIntake(prevIntake, { intakeFlowStep: 0 }),
+            intakeConfirmedStepIds: Array.from(confirmed),
+            lifestyle: buildLifestyleFromIntake(intake),
+            matchPreferences: buildMatchPreferencesFromIntake(intake),
+          };
+        }
+        return {
+          ...prev,
+          intake: patchIntake(prevIntake, { intakeFlowStep: cursor + 1 }),
+          intakeConfirmedStepIds: Array.from(confirmed),
         };
       }
 
@@ -177,7 +204,7 @@ export function IntakeFlowWizard() {
         intakeConfirmedStepIds: Array.from(confirmed),
       };
     });
-  }, [due.length, intake, router, setSession, step, stepIdx]);
+  }, [cursor, due.length, intake, router, setSession, step, stepIdx]);
 
   const showError = attempted && !validCurrent;
 
@@ -253,10 +280,13 @@ export function IntakeFlowWizard() {
             Tentatively touched
           </p>
           <ul className="list-inside list-disc space-y-1.5 text-sm leading-relaxed text-muted-foreground">
-            {humanLabelsForInferredSteps(inferredIds).map((row) => (
+            {humanLabelsForInferredSteps(prefilledIds).map((row) => (
               <li key={row.id}>{row.label}</li>
             ))}
           </ul>
+          {session.intakeExtractionMeta?.trustLine ? (
+            <p className="text-sm leading-relaxed text-foreground/85">{session.intakeExtractionMeta.trustLine}</p>
+          ) : null}
         </div>
       ) : null}
 

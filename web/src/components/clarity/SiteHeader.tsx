@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sparkles } from "lucide-react";
 
+import { ClarityLogo } from "@/components/clarity/ClarityLogo";
 import { useClaritySession } from "@/contexts/clarity-session-context";
 import { HEADER_CRISIS_CTA } from "@/lib/clarity/crisis-copy";
 import { Button } from "@/components/ui/button";
@@ -16,12 +16,23 @@ export function SiteHeader() {
   return (
     <header className="no-print sticky top-0 z-40 border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
       <div className="clarity-container flex h-14 items-center justify-between gap-3 sm:h-16">
-        <Link href="/" className="group flex items-center gap-3 text-foreground">
-          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-clarity-soft transition group-hover:bg-primary/92 sm:h-11 sm:w-11">
-            <Sparkles className="size-[18px] sm:size-5" aria-hidden />
-          </span>
-          <span className="font-heading text-[1.0625rem] font-semibold tracking-tight sm:text-lg">
-            Clarity
+        <Link
+          href="/"
+          className="group flex items-center gap-3 text-foreground"
+          aria-label="Clarity — home"
+        >
+          <ClarityLogo
+            size="sm"
+            priority
+            className="h-10 w-10 transition duration-300 group-hover:scale-[1.04] sm:h-11 sm:w-11"
+          />
+          <span
+            className="font-heading text-[1.125rem] font-medium italic tracking-[-0.03em] sm:text-xl"
+            style={{ fontFeatureSettings: '"SOFT" 1, "WONK" 1' }}
+          >
+            <span className="bg-gradient-to-r from-foreground to-primary/85 bg-clip-text text-transparent">
+              Clarity
+            </span>
           </span>
         </Link>
         <nav className="flex items-center gap-1.5 sm:gap-2">

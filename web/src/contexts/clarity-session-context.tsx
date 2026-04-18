@@ -13,7 +13,7 @@ import {
 
 import { crisisSupportPanelState } from "@/lib/clarity/crisis-support-panel-state";
 import { evaluateSessionCrisisLevel } from "@/lib/clarity/crisis-heuristics";
-import { claritySessionPersistence } from "@/lib/clarity/persisted-session";
+import { consumeDemoOneShot } from "@/lib/clarity/persisted-session";
 import { createDefaultSession } from "@/lib/clarity/session";
 import type { ClaritySession, CrisisLevel } from "@/types/clarity";
 import type { CrisisSupportPanelVariant } from "@/lib/clarity/crisis-support-panel-state";
@@ -39,6 +39,7 @@ type ClarityContextValue = {
 
 const ClarityContext = createContext<ClarityContextValue | null>(null);
 
+/** Intake prose used for lightweight crisis keyword scan (non-clinical). */
 function collectIntakeText(intake: ClaritySession["intake"]): string {
   const parts: string[] = [];
   const push = (v: unknown) => {
@@ -50,6 +51,16 @@ function collectIntakeText(intake: ClaritySession["intake"]): string {
   return parts.join("\n");
 }
 
+function collectCrisisTextBlob(
+  intake: ClaritySession["intake"],
+  brainDumpText: string | undefined
+): string {
+  const a = collectIntakeText(intake);
+  const b = typeof brainDumpText === "string" ? brainDumpText.trim() : "";
+  if (a && b) return `${a}\n${b}`;
+  return a || b;
+}
+
 export function ClaritySessionProvider({ children }: { children: ReactNode }) {
   const [session, setSessionState] = useState<ClaritySession>(createDefaultSession);
   const [hydrated, setHydrated] = useState(false);
@@ -57,31 +68,25 @@ export function ClaritySessionProvider({ children }: { children: ReactNode }) {
   const [crisisPanelDismissed, setCrisisPanelDismissed] = useState(false);
 
   useEffect(() => {
-    const saved = claritySessionPersistence.load();
-    const dismissed =
-      typeof window !== "undefined" &&
-      sessionStorage.getItem(`${CRISIS_DISMISS_PREFIX}${saved?.id ?? "none"}`) === "1";
-    const panelDismissed =
-      typeof window !== "undefined" &&
-      sessionStorage.getItem(`${CRISIS_PANEL_DISMISS_PREFIX}${saved?.id ?? "none"}`) === "1";
+    /*
+     * Persistence across refresh is intentionally disabled: refreshing the site
+     * starts a fresh session. The one-shot demo handoff (a dedicated key,
+     * written by `applyDemoSession`) is the single allowed exception and is
+     * consumed + deleted here, so any subsequent refresh still starts fresh.
+     */
+    const demo = consumeDemoOneShot();
     startTransition(() => {
-      if (saved) setSessionState(saved);
-      setCrisisDismissed(dismissed);
-      setCrisisPanelDismissed(panelDismissed);
+      if (demo) setSessionState(demo);
+      setCrisisDismissed(false);
+      setCrisisPanelDismissed(false);
       setHydrated(true);
     });
   }, []);
 
-  useEffect(() => {
-    if (!hydrated) return;
-    claritySessionPersistence.save(session);
-  }, [session, hydrated]);
-
   const crisisLevel = useMemo((): CrisisLevel => {
     return evaluateSessionCrisisLevel(
       session.intake,
-      collectIntakeText(session.intake),
-      session.brainDump?.text
+      collectCrisisTextBlob(session.intake, session.brainDump?.text)
     );
   }, [session.intake, session.brainDump?.text]);
 
@@ -125,7 +130,6 @@ export function ClaritySessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resetFlow = useCallback(() => {
-    claritySessionPersistence.clear();
     const fresh = createDefaultSession();
     setSessionState(fresh);
     setCrisisDismissed(false);

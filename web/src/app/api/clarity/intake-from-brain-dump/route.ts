@@ -1,9 +1,14 @@
+import { finalizeBrainDumpCanonical } from "@/lib/ai/intake-extraction-canonical";
 import {
+  type FullExtractionResult,
   INTAKE_EXTRACTION_SYSTEM,
   buildIntakeExtractionUserPayload,
   buildMockIntakeFromBrainDump,
   deriveInferredStepIdsFromPatch,
-  normalizeExtractionParsed,
+  derivePrefilledStepIdsFromPatch,
+  fallbackStillNeededStepIds,
+  mergeIntakeFromExtraction,
+  normalizeFullExtraction,
   refineInferredStepIds,
 } from "@/lib/ai/intake-extraction";
 import { getOpenAiApiKey } from "@/lib/env";
@@ -15,6 +20,51 @@ type Body = {
   brainDump?: BrainDump | null;
   intake?: IntakeAnswers;
 };
+
+/** Canonical extraction response: `stillNeededStepIds` and `prefilledStepIds` are server-finalized. */
+function buildExtractionResponse(
+  existing: IntakeAnswers,
+  brainDumpText: string,
+  themeChipIds: readonly string[],
+  rawModel: FullExtractionResult,
+  usedMock: boolean
+) {
+  const canonical = finalizeBrainDumpCanonical({
+    existing,
+    model: rawModel,
+    brainDumpText,
+    themeChipIds,
+  });
+
+  const merged = mergeIntakeFromExtraction(existing, canonical.intakePatch);
+  let stillNeeded = canonical.stillNeededStepIds;
+  if (stillNeeded.length === 0) {
+    stillNeeded = fallbackStillNeededStepIds(merged, canonical.fieldConfidence);
+  }
+
+  let claimed =
+    canonical.inferredStepIds.length > 0
+      ? canonical.inferredStepIds
+      : deriveInferredStepIdsFromPatch(existing, canonical.intakePatch);
+  claimed = refineInferredStepIds(existing, canonical.intakePatch, claimed);
+  const reviewIds = claimed.length ? claimed : stillNeeded;
+
+  const prefilledStepIds = derivePrefilledStepIdsFromPatch(canonical.intakePatch);
+
+  return {
+    intakePatch: canonical.intakePatch,
+    stillNeededStepIds: stillNeeded,
+    prefilledStepIds,
+    /** @deprecated Prefer `prefilledStepIds` — kept for older clients. */
+    inferredStepIds: reviewIds,
+    fieldConfidence: canonical.fieldConfidence,
+    emotionalSignals: canonical.emotionalSignals,
+    reasoningSummary: canonical.reasoningSummary,
+    trustLine: canonical.trustLine,
+    answeredStepIds: canonical.answeredStepIds,
+    usedMock,
+  };
+}
 
 export async function POST(req: Request) {
   let body: Body;
@@ -38,12 +88,7 @@ export async function POST(req: Request) {
   const key = getOpenAiApiKey();
   if (!key) {
     const mock = buildMockIntakeFromBrainDump(text, themes);
-    const inferred = refineInferredStepIds(existing, mock.intakePatch, mock.inferredStepIds);
-    return Response.json({
-      intakePatch: mock.intakePatch,
-      inferredStepIds: inferred,
-      usedMock: true,
-    });
+    return Response.json(buildExtractionResponse(existing, text, themes, mock, true));
   }
 
   try {
@@ -55,7 +100,7 @@ export async function POST(req: Request) {
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        temperature: 0.25,
+        temperature: 0.38,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: INTAKE_EXTRACTION_SYSTEM },
@@ -69,12 +114,7 @@ export async function POST(req: Request) {
 
     if (!res.ok) {
       const mock = buildMockIntakeFromBrainDump(text, themes);
-      const inferred = refineInferredStepIds(existing, mock.intakePatch, mock.inferredStepIds);
-      return Response.json({
-        intakePatch: mock.intakePatch,
-        inferredStepIds: inferred,
-        usedMock: true,
-      });
+      return Response.json(buildExtractionResponse(existing, text, themes, mock, true));
     }
 
     const data = (await res.json()) as {
@@ -83,12 +123,7 @@ export async function POST(req: Request) {
     const content = data.choices?.[0]?.message?.content;
     if (!content) {
       const mock = buildMockIntakeFromBrainDump(text, themes);
-      const inferred = refineInferredStepIds(existing, mock.intakePatch, mock.inferredStepIds);
-      return Response.json({
-        intakePatch: mock.intakePatch,
-        inferredStepIds: inferred,
-        usedMock: true,
-      });
+      return Response.json(buildExtractionResponse(existing, text, themes, mock, true));
     }
 
     let parsed: unknown;
@@ -96,34 +131,22 @@ export async function POST(req: Request) {
       parsed = JSON.parse(content) as unknown;
     } catch {
       const mock = buildMockIntakeFromBrainDump(text, themes);
-      const inferred = refineInferredStepIds(existing, mock.intakePatch, mock.inferredStepIds);
-      return Response.json({
-        intakePatch: mock.intakePatch,
-        inferredStepIds: inferred,
-        usedMock: true,
-      });
+      return Response.json(buildExtractionResponse(existing, text, themes, mock, true));
     }
 
-    const normalized = normalizeExtractionParsed(parsed);
-    let claimed =
-      normalized.inferredStepIds.length > 0
-        ? normalized.inferredStepIds
-        : deriveInferredStepIdsFromPatch(existing, normalized.intakePatch);
-    claimed = refineInferredStepIds(existing, normalized.intakePatch, claimed);
+    let full = normalizeFullExtraction(parsed);
+    const mergedEarly = mergeIntakeFromExtraction(existing, full.intakePatch);
+    if (full.stillNeededStepIds.length === 0) {
+      full = {
+        ...full,
+        stillNeededStepIds: fallbackStillNeededStepIds(mergedEarly, full.fieldConfidence),
+      };
+    }
 
-    return Response.json({
-      intakePatch: normalized.intakePatch,
-      inferredStepIds: claimed,
-      usedMock: false,
-    });
+    return Response.json(buildExtractionResponse(existing, text, themes, full, false));
   } catch (e) {
     console.error("[clarity/intake-from-brain-dump]", e);
     const mock = buildMockIntakeFromBrainDump(text, themes);
-    const inferred = refineInferredStepIds(existing, mock.intakePatch, mock.inferredStepIds);
-    return Response.json({
-      intakePatch: mock.intakePatch,
-      inferredStepIds: inferred,
-      usedMock: true,
-    });
+    return Response.json(buildExtractionResponse(existing, text, themes, mock, true));
   }
 }

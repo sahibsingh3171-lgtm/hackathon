@@ -26,6 +26,10 @@ export const metadata: Metadata = {
   title: "Clarity — gentle therapy prep",
   description:
     "A quiet place to notice how you are doing, put words to it, and bring something useful to a first session. Not therapy, not a crisis line.",
+  icons: {
+    icon: [{ url: "/clarity-logo.png", type: "image/png" }],
+    apple: "/clarity-logo.png",
+  },
 };
 
 export default function RootLayout({

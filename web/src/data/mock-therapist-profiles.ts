@@ -1,236 +1,50 @@
 /**
- * Synthetic therapist directory for Clarity MVP demos.
- * All names, bios, reviews, and URLs are fictional — not scraped or real providers.
+ * Therapist directory for Clarity MVP matching + cards.
+ *
+ * **Current dataset:** Arlington Heights, IL area public listings (names, credentials, specialties,
+ * pricing notes, format, and booking links) assembled for demo filtering — not verified by Clarity,
+ * not real-time availability, and not a substitute for checking credentials and fit directly with
+ * each practice.
  */
 
-export type MockTherapistModality = "in_person" | "telehealth";
+export type {
+  MockApproach,
+  MockIdentityFocus,
+  MockStyleTag,
+  MockTherapistModality,
+  MockTherapistProfile,
+} from "./mock-therapist-profiles-types";
 
-export interface MockTherapistProfile {
-  id: string;
-  name: string;
-  credentials: string;
-  specialties: string[];
-  modalities: MockTherapistModality[];
-  telehealth: boolean;
-  inPerson: boolean;
-  bio: string;
-  location: string;
-  priceRange: { min: number; max: number };
-  insuranceAccepted: string[];
-  rating: number;
-  reviewCount: number;
-  reviewSummary: string;
-  tags: string[];
-  idealFor: string;
-  bookingUrl: string;
-  profileImage: string;
-}
+import { buildArlingtonProfiles } from "./arlington-heights-build";
+
+export { buildArlingtonProfiles };
+import type {
+  MockApproach,
+  MockIdentityFocus,
+  MockStyleTag,
+  MockTherapistProfile,
+} from "./mock-therapist-profiles-types";
 
 function img(seed: string): string {
   return `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(seed)}`;
 }
 
-export const MOCK_THERAPIST_PROFILES: MockTherapistProfile[] = [
-  {
-    id: "mvp-001",
-    name: "Amelia Vasquez",
-    credentials: "LCSW",
-    specialties: ["Anxiety", "Panic", "Life transitions", "Young adults"],
-    modalities: ["telehealth", "in_person"],
-    telehealth: true,
-    inPerson: true,
-    bio: "Amelia blends nervous-system education with practical CBT tools. Former university counseling background; especially enjoys helping new graduates navigate “what now?” anxiety without rushing you to have it figured out.",
-    location: "Austin, TX",
-    priceRange: { min: 125, max: 165 },
-    insuranceAccepted: ["Aetna", "Cigna", "Out-of-network", "Superbill"],
-    rating: 4.9,
-    reviewCount: 184,
-    reviewSummary:
-      "Clients often mention feeling calmer within a few sessions and appreciated her pacing with exposure work.",
-    tags: ["anxiety", "young adults", "life transitions", "culturally responsive"],
-    idealFor: "People who want structure without feeling pushed.",
-    bookingUrl: "https://example.com/clarity-demo/book/mvp-001",
-    profileImage: img("mvp-001"),
-  },
-  {
-    id: "mvp-002",
-    name: "Daniel Okoro",
-    credentials: "PhD, LP",
-    specialties: ["Depression", "Burnout", "Stress", "Men’s mental health"],
-    modalities: ["telehealth", "in_person"],
-    telehealth: true,
-    inPerson: true,
-    bio: "Daniel works with professionals who look fine on paper but feel hollow or irritable behind closed doors. Integrative approach drawing from ACT and behavioral activation — humor welcome, toxic positivity not.",
-    location: "Minneapolis, MN",
-    priceRange: { min: 175, max: 225 },
-    insuranceAccepted: ["UnitedHealthcare", "Blue Cross Blue Shield", "Self-pay"],
-    rating: 4.85,
-    reviewCount: 96,
-    reviewSummary:
-      "Reviewers frequently note his directness paired with warmth, especially around work stress.",
-    tags: ["depression", "burnout", "stress", "premium"],
-    idealFor: "High-achievers who are tired of “just relax” advice.",
-    bookingUrl: "https://example.com/clarity-demo/book/mvp-002",
-    profileImage: img("mvp-002"),
-  },
-  {
-    id: "mvp-003",
-    name: "Priya Natarajan",
-    credentials: "LMFT",
-    specialties: ["Relationships", "Communication", "Anxiety", "Burnout"],
-    modalities: ["telehealth", "in_person"],
-    telehealth: true,
-    inPerson: true,
-    bio: "Priya helps couples and individuals untangle conflict cycles and the stories underneath them. Emotionally focused threads with practical communication drills you can use the same week.",
-    location: "Seattle, WA",
-    priceRange: { min: 140, max: 180 },
-    insuranceAccepted: ["Premera", "Kaiser", "Out-of-network"],
-    rating: 4.88,
-    reviewCount: 142,
-    reviewSummary: "Many reviews highlight her balance of compassion and clarity in heated topics.",
-    tags: ["relationships", "couples", "communication"],
-    idealFor: "Partners who want fewer landmines and more curiosity.",
-    bookingUrl: "https://example.com/clarity-demo/book/mvp-003",
-    profileImage: img("mvp-003"),
-  },
-  {
-    id: "mvp-004",
-    name: "Jordan Lee",
-    credentials: "LCSW",
-    specialties: ["Sleep", "Anxiety", "Stress", "Mindfulness"],
-    modalities: ["telehealth"],
-    telehealth: true,
-    inPerson: false,
-    bio: "Jordan focuses on sleep-anxiety loops and the nervous system. Short behavioral experiments between sessions; no shame if your sleep hygiene is “aspirational.”",
-    location: "Remote · OR/WA licensed",
-    priceRange: { min: 110, max: 145 },
-    insuranceAccepted: ["PacificSource", "Self-pay", "Superbill"],
-    rating: 4.78,
-    reviewCount: 67,
-    reviewSummary: "Clients like the concrete sleep window plans and gentle accountability.",
-    tags: ["sleep", "anxiety", "mindfulness"],
-    idealFor: "Night owls whose brains will not power down.",
-    bookingUrl: "https://example.com/clarity-demo/book/mvp-004",
-    profileImage: img("mvp-004"),
-  },
-  {
-    id: "mvp-005",
-    name: "Sam Rivera",
-    credentials: "LPC",
-    specialties: ["LGBTQ+", "Identity", "Anxiety", "Life transitions"],
-    modalities: ["telehealth", "in_person"],
-    telehealth: true,
-    inPerson: true,
-    bio: "Sam works with queer and trans clients navigating family, work, and self-trust. Affirming, trauma-informed, and collaborative — you lead the pace.",
-    location: "Denver, CO",
-    priceRange: { min: 120, max: 155 },
-    insuranceAccepted: ["Anthem", "Cigna", "Medicaid", "Sliding scale"],
-    rating: 4.92,
-    reviewCount: 201,
-    reviewSummary: "Often praised for creating safety without making big feelings feel theatrical.",
-    tags: ["lgbtq", "identity", "anxiety"],
-    idealFor: "Anyone who needs a therapist who gets community context.",
-    bookingUrl: "https://example.com/clarity-demo/book/mvp-005",
-    profileImage: img("mvp-005"),
-  },
-  {
-    id: "mvp-006",
-    name: "Morgan Ellis",
-    credentials: "PsyD",
-    specialties: ["Burnout", "Depression", "Perfectionism", "Stress"],
-    modalities: ["in_person"],
-    telehealth: false,
-    inPerson: true,
-    bio: "Morgan helps people dismantle perfectionism without losing ambition. Schema-informed work with clear behavioral experiments.",
-    location: "Chicago, IL",
-    priceRange: { min: 190, max: 240 },
-    insuranceAccepted: ["Blue Cross Blue Shield", "Self-pay"],
-    rating: 4.8,
-    reviewCount: 54,
-    reviewSummary: "Reviews mention feeling seen in high-pressure careers without being pathologized.",
-    tags: ["burnout", "perfectionism", "executives"],
-    idealFor: "People who want depth and dislike fluff.",
-    bookingUrl: "https://example.com/clarity-demo/book/mvp-006",
-    profileImage: img("mvp-006"),
-  },
-  {
-    id: "mvp-007",
-    name: "Casey Nguyen",
-    credentials: "LMHC",
-    specialties: ["Trauma", "Anxiety", "EMDR", "Stress"],
-    modalities: ["telehealth", "in_person"],
-    telehealth: true,
-    inPerson: true,
-    bio: "Casey integrates EMDR phases with stabilization skills for busy clients. Clear consent and pacing; never pressure to go faster than your system allows.",
-    location: "Boston, MA",
-    priceRange: { min: 165, max: 200 },
-    insuranceAccepted: ["Tufts", "Harvard Pilgrim", "Out-of-network"],
-    rating: 4.87,
-    reviewCount: 118,
-    reviewSummary: "EMDR clients often note careful pacing and strong prep before memory work.",
-    tags: ["trauma", "emdr", "anxiety"],
-    idealFor: "People who want trauma tools without being retraumatized by the process.",
-    bookingUrl: "https://example.com/clarity-demo/book/mvp-007",
-    profileImage: img("mvp-007"),
-  },
-  {
-    id: "mvp-008",
-    name: "Riley Brooks",
-    credentials: "LCSW",
-    specialties: ["Grief", "Loss", "Depression", "Life transitions"],
-    modalities: ["telehealth"],
-    telehealth: true,
-    inPerson: false,
-    bio: "Riley supports ambiguous loss — breakups, job endings, identity shifts — with narrative therapy threads and grief psychoeducation.",
-    location: "Remote · multi-state",
-    priceRange: { min: 95, max: 130 },
-    insuranceAccepted: ["Oscar", "Self-pay", "Sliding scale"],
-    rating: 4.75,
-    reviewCount: 44,
-    reviewSummary: "Clients describe sessions as unhurried and emotionally spacious.",
-    tags: ["grief", "loss", "transitions"],
-    idealFor: "Anyone carrying a loss that does not fit a neat timeline.",
-    bookingUrl: "https://example.com/clarity-demo/book/mvp-008",
-    profileImage: img("mvp-008"),
-  },
-  {
-    id: "mvp-009",
-    name: "Taylor Kim",
-    credentials: "LMFT",
-    specialties: ["Couples", "Communication", "Stress", "Parenting"],
-    modalities: ["telehealth", "in_person"],
-    telehealth: true,
-    inPerson: true,
-    bio: "Taylor works with dual-career couples on repair after chronic stress. Gottman-informed tools with room for humor and cultural nuance.",
-    location: "San Francisco Bay Area, CA",
-    priceRange: { min: 200, max: 260 },
-    insuranceAccepted: ["Aetna", "Self-pay", "Superbill"],
-    rating: 4.9,
-    reviewCount: 163,
-    reviewSummary: "Couples mention practical scripts that actually get used during the week.",
-    tags: ["couples", "parenting", "stress"],
-    idealFor: "Partners who want fewer repeated fights and more teamwork.",
-    bookingUrl: "https://example.com/clarity-demo/book/mvp-009",
-    profileImage: img("mvp-009"),
-  },
-  {
-    id: "mvp-010",
-    name: "Jamie Foster",
-    credentials: "LPC",
-    specialties: ["ADHD", "Anxiety", "Executive function", "Young adults"],
-    modalities: ["telehealth"],
-    telehealth: true,
-    inPerson: false,
-    bio: "Jamie helps ADHD adults build systems that fit real brains — not Pinterest boards. Body doubling concepts, shame reduction, and gentle accountability.",
-    location: "Remote · TX licensed",
-    priceRange: { min: 105, max: 140 },
-    insuranceAccepted: ["UnitedHealthcare", "Self-pay"],
-    rating: 4.82,
-    reviewCount: 89,
-    reviewSummary: "Clients like the shame-free framing of “productivity shame.”",
-    tags: ["adhd", "anxiety", "young adults"],
-    idealFor: "Neurodivergent folks tired of one-size productivity advice.",
-    bookingUrl: "https://example.com/clarity-demo/book/mvp-010",
-    profileImage: img("mvp-010"),
-  },
-];
+export const MOCK_THERAPIST_PROFILES: MockTherapistProfile[] = buildArlingtonProfiles(img);
+
+// —— Derived option lists (single source of truth for filter chips) ——————————————
+
+export const ALL_IDENTITY_FOCUS: readonly MockIdentityFocus[] = Array.from(
+  new Set(MOCK_THERAPIST_PROFILES.flatMap((p) => p.identityFocus ?? []))
+).sort() as readonly MockIdentityFocus[];
+
+export const ALL_STYLE_TAGS: readonly MockStyleTag[] = Array.from(
+  new Set(MOCK_THERAPIST_PROFILES.flatMap((p) => p.styleTags ?? []))
+).sort() as readonly MockStyleTag[];
+
+export const ALL_APPROACHES: readonly MockApproach[] = Array.from(
+  new Set(MOCK_THERAPIST_PROFILES.flatMap((p) => p.approaches ?? []))
+).sort() as readonly MockApproach[];
+
+export const ALL_LANGUAGES: readonly string[] = Array.from(
+  new Set(MOCK_THERAPIST_PROFILES.flatMap((p) => p.languages ?? []))
+).sort();

@@ -3,8 +3,7 @@
  * crisis heuristics, prep sheet, next-step templates. AI + matching live under
  * `lib/ai` and `lib/therapist`; mock rows under `data/`.
  *
- * **Session state:** `contexts/clarity-session-context` + `claritySessionPersistence`
- * (sessionStorage). Replace persistence with API calls when you add a backend.
+ * **Session state:** `contexts/clarity-session-context` (in-memory per tab refresh; demo one-shot only).
  */
 
 export { FLOW_STEPS, stepIndexForPath } from "./constants";
@@ -46,6 +45,7 @@ export { intakeFlowHighlightLines } from "./intake-flow-highlights";
 export { INTAKE_QUESTIONS, intakeCompletionCount, intakeRequiredComplete, isLikert } from "./intake-questions";
 export { buildNextSteps } from "./next-steps-templates";
 export { buildPrepSheet, intakeHighlightLines, lifestyleHighlightLines } from "./prep-sheet";
+export { buildPracticeSession } from "./practice-session";
 export {
   claritySessionPersistence,
   type ClaritySessionPersistence,

@@ -3,7 +3,7 @@ import type { RankedTherapistMatch } from "./match-algorithm";
 export type TherapistMatchSortMode = "recommended" | "fee_asc" | "rating_desc" | "reviews_desc";
 
 function compareTupleDesc(a: RankedTherapistMatch, b: RankedTherapistMatch): number {
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < a.sortTuple.length; i++) {
     if (a.sortTuple[i] !== b.sortTuple[i]) return b.sortTuple[i]! - a.sortTuple[i]!;
   }
   return a.therapist.id.localeCompare(b.therapist.id);

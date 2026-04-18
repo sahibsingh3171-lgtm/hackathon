@@ -1,21 +1,35 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
-import { BrainDumpInput } from "@/components/clarity/BrainDumpInput";
+import { BrainDumpFaq } from "@/components/clarity/BrainDumpFaq";
+import { BrainDumpInput, type BrainDumpInputHandle } from "@/components/clarity/BrainDumpInput";
+import { BrainDumpStarters } from "@/components/clarity/BrainDumpStarters";
 import { StepShell } from "@/components/clarity/StepShell";
 import { Button } from "@/components/ui/button";
 import { useClaritySession } from "@/contexts/clarity-session-context";
-import { mergeIntakePreferExisting } from "@/lib/ai/intake-extraction";
+import {
+  derivePrefilledStepIdsFromPatch,
+  mergeIntakeFromExtraction,
+} from "@/lib/ai/intake-extraction";
+import { sortStepIdsByFlow } from "@/lib/clarity/intake-due-steps";
 import { isBrainDumpLongEnough } from "@/lib/validation";
-import type { BrainDump, IntakeAnswers } from "@/types/clarity";
+import type { BrainDump, IntakeAnswers, IntakeExtractionMeta } from "@/types/clarity";
 
 const empty: BrainDump = { text: "", themes: [], voice: { status: "skipped" } };
 
 type ExtractResponse = {
   intakePatch?: Partial<IntakeAnswers>;
+  prefilledStepIds?: string[];
   inferredStepIds?: string[];
+  stillNeededStepIds?: string[];
+  fieldConfidence?: Record<string, number>;
+  emotionalSignals?: string[];
+  reasoningSummary?: string;
+  trustLine?: string;
+  answeredStepIds?: string[];
+  usedMock?: boolean;
   error?: string;
 };
 
@@ -24,6 +38,7 @@ export default function BrainDumpPage() {
   const { session, setSession } = useClaritySession();
   const [extracting, setExtracting] = useState(false);
   const [extractError, setExtractError] = useState<string | null>(null);
+  const inputRef = useRef<BrainDumpInputHandle>(null);
 
   const dump = useMemo((): BrainDump => {
     const raw = session.brainDump;
@@ -39,10 +54,15 @@ export default function BrainDumpPage() {
   const ok = useMemo(() => isBrainDumpLongEnough(dump.text), [dump.text]);
 
   const goIntakeCleared = () => {
+    // Clear any prior brain-dump state so the user sees the *full* 28-question
+    // check-in unchanged. `intakeWizardStepIds: null` means “no shortcut —
+    // show every step” in IntakeFlowWizard.
     setSession({
       brainDump: null,
-      intakeInferredStepIds: [],
+      intakePrefilledStepIds: [],
       intakeConfirmedStepIds: [],
+      intakeWizardStepIds: null,
+      intakeExtractionMeta: null,
       intake: { ...session.intake, intakeFlowStep: 0 },
     });
     router.push("/intake");
@@ -75,15 +95,30 @@ export default function BrainDumpPage() {
         setSession({
           brainDump: dump,
           intake: { ...intakePayload, intakeFlowStep: 0 },
-          intakeInferredStepIds: [],
+          intakePrefilledStepIds: [],
           intakeConfirmedStepIds: [],
+          intakeWizardStepIds: null,
+          intakeExtractionMeta: null,
         });
         router.push("/intake");
         return;
       }
       const patch = data.intakePatch ?? {};
-      const inferred = Array.isArray(data.inferredStepIds) ? data.inferredStepIds : [];
-      const merged = mergeIntakePreferExisting(intakePayload, patch);
+      const merged = mergeIntakeFromExtraction(intakePayload, patch);
+      const stillRaw = Array.isArray(data.stillNeededStepIds) ? data.stillNeededStepIds : [];
+      const wizardIds = stillRaw.length ? sortStepIdsByFlow(stillRaw) : null;
+      const prefilledFromServer = Array.isArray(data.prefilledStepIds) ? data.prefilledStepIds : null;
+      const prefilled =
+        prefilledFromServer && prefilledFromServer.length > 0
+          ? sortStepIdsByFlow(prefilledFromServer)
+          : derivePrefilledStepIdsFromPatch(patch);
+      const meta: IntakeExtractionMeta = {
+        fieldConfidence: data.fieldConfidence,
+        answeredStepIds: Array.isArray(data.answeredStepIds) ? data.answeredStepIds : undefined,
+        reasoningSummary: data.reasoningSummary,
+        trustLine: data.trustLine,
+        emotionalSignals: Array.isArray(data.emotionalSignals) ? data.emotionalSignals : undefined,
+      };
       setSession({
         brainDump: dump,
         intake: {
@@ -91,8 +126,10 @@ export default function BrainDumpPage() {
           brain_dump_tags: tags.length ? tags : merged.brain_dump_tags,
           intakeFlowStep: 0,
         },
-        intakeInferredStepIds: inferred,
+        intakePrefilledStepIds: prefilled,
         intakeConfirmedStepIds: [],
+        intakeWizardStepIds: wizardIds,
+        intakeExtractionMeta: meta,
       });
       router.push("/intake");
     } catch {
@@ -102,8 +139,10 @@ export default function BrainDumpPage() {
       setSession({
         brainDump: dump,
         intake: { ...intakePayload, intakeFlowStep: 0 },
-        intakeInferredStepIds: [],
+        intakePrefilledStepIds: [],
         intakeConfirmedStepIds: [],
+        intakeWizardStepIds: null,
+        intakeExtractionMeta: null,
       });
       router.push("/intake");
     } finally {
@@ -124,7 +163,7 @@ export default function BrainDumpPage() {
         <StepShell
           path="/brain-dump"
           title="Listen first, in your own words"
-          subtitle="There is no wrong shape for this — fragments, lists, or a single honest paragraph are all welcome. When you are ready, we use only what you type to quietly sketch a few answers; you stay in charge of every line."
+          subtitle="Optional — but if you write a few lines, we can quietly pre-answer parts of the full 28-question check-in, and only ask what is left. You stay in charge of every line, and you can edit anything we sketch."
           maxWidthClass="max-w-3xl"
           calmProgress
           busy={extracting}
@@ -135,11 +174,22 @@ export default function BrainDumpPage() {
             extracting ? "Finding what is still to ask…" : "Continue — only what is left to ask"
           }
         >
-          <BrainDumpInput
-            value={dump}
-            onChange={(next) => setSession({ brainDump: next })}
-            disabled={extracting}
-          />
+          <div className="mx-auto max-w-2xl">
+            <BrainDumpStarters
+              hasText={dump.text.trim().length > 0}
+              disabled={extracting}
+              onApply={(prompt) => inputRef.current?.insertText(prompt)}
+            />
+          </div>
+
+          <div className="mt-8">
+            <BrainDumpInput
+              ref={inputRef}
+              value={dump}
+              onChange={(next) => setSession({ brainDump: next })}
+              disabled={extracting}
+            />
+          </div>
 
           {extractError ? (
             <p
@@ -158,8 +208,8 @@ export default function BrainDumpPage() {
                     Prefer to start structured?
                   </p>
                   <p className="text-sm leading-relaxed text-muted-foreground">
-                    That is a perfectly good choice. You will see the same thoughtful questions, in full
-                    — nothing assumes you wrote an opening note.
+                    That is a perfectly good choice. You will see the same thoughtful 28-question
+                    check-in, in full — nothing assumes you wrote an opening note.
                   </p>
                 </div>
                 <Button
@@ -173,6 +223,10 @@ export default function BrainDumpPage() {
                 </Button>
               </div>
             </div>
+          </div>
+
+          <div className="mx-auto mt-10 max-w-2xl">
+            <BrainDumpFaq />
           </div>
         </StepShell>
       </div>

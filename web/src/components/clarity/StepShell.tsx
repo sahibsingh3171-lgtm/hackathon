@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 
 import { FLOW_STEPS, stepIndexForPath } from "@/lib/clarity/constants";
@@ -22,6 +23,8 @@ export function StepShell({
   calmProgress = false,
   /** e.g. while saving or calling an API — dims primary actions slightly. */
   busy = false,
+  /** Extra controls beside Back (e.g. link to browse matches). */
+  footerAside,
 }: {
   path: string;
   title: string;
@@ -35,6 +38,7 @@ export function StepShell({
   maxWidthClass?: string;
   calmProgress?: boolean;
   busy?: boolean;
+  footerAside?: ReactNode;
 }) {
   const idx = stepIndexForPath(path);
   const total = FLOW_STEPS.length;
@@ -94,23 +98,26 @@ export function StepShell({
       <div className={cn("mt-10", calmProgress ? "mt-12 space-y-10" : "space-y-8")}>{children}</div>
 
       <footer className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-border/50 pt-8 sm:mt-14 sm:pt-10">
-        {onBack ? (
-          <Button
-            type="button"
-            variant="ghost"
-            className="-ml-2 rounded-xl px-3 text-muted-foreground hover:text-foreground"
-            onClick={onBack}
-          >
-            Back
-          </Button>
-        ) : (
-          <Link
-            href="/"
-            className="inline-flex h-10 items-center rounded-xl px-3 text-sm font-medium text-muted-foreground transition hover:bg-muted/60 hover:text-foreground"
-          >
-            Home
-          </Link>
-        )}
+        <div className="flex min-w-0 flex-wrap items-center gap-3 sm:gap-4">
+          {onBack ? (
+            <Button
+              type="button"
+              variant="ghost"
+              className="-ml-2 rounded-xl px-3 text-muted-foreground hover:text-foreground"
+              onClick={onBack}
+            >
+              Back
+            </Button>
+          ) : (
+            <Link
+              href="/"
+              className="inline-flex h-10 items-center rounded-xl px-3 text-sm font-medium text-muted-foreground transition hover:bg-muted/60 hover:text-foreground"
+            >
+              Home
+            </Link>
+          )}
+          {footerAside}
+        </div>
         {showNext && onNext ? (
           <Button
             type="button"

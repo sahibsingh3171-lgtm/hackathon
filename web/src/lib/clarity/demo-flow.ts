@@ -1,14 +1,17 @@
 /**
  * Hackathon demo: persona, intake, brain dump, AI-shaped results, and a full session snapshot.
- * Use `applyDemoSession()` from a dev-only control, or import `getDemoSession()` and persist to
- * `CLARITY_STORAGE_KEY` (see `web/DEMO.md`).
+ *
+ * Persistence across refresh is disabled globally. `applyDemoSession` uses a
+ * dedicated **one-shot** handoff key (see `persisted-session.ts`) that is read
+ * and deleted by the session context on its next mount — so a follow-up
+ * refresh still starts fresh, matching the rest of the app.
  */
 
 import { INTAKE_FLOW_STEP_TOTAL } from "@/lib/clarity/intake-flow-config";
 import { buildMatchPreferencesFromIntake } from "@/lib/clarity/intake-flow-validation";
 import { buildNextSteps } from "@/lib/clarity/next-steps-templates";
+import { writeDemoOneShot } from "@/lib/clarity/persisted-session";
 import { buildPrepSheet } from "@/lib/clarity/prep-sheet";
-import { CLARITY_STORAGE_KEY } from "@/lib/clarity/constants";
 import type {
   AiSummaryResult,
   BrainDump,
@@ -171,7 +174,7 @@ export const DEMO_READINESS: ReadinessAnalysisResponse = {
  * 6 · Expected top mock profile ids for this narrative (verify live with matcher).
  * Story: anxiety + burnout + sleep + relationships → Amelia, Daniel, Priya, Jordan often rank high.
  */
-export const DEMO_MATCH_PROFILE_IDS_ORDERED = ["mvp-001", "mvp-002", "mvp-003", "mvp-004"] as const;
+export const DEMO_MATCH_PROFILE_IDS_ORDERED = ["ah-001", "ah-002", "ah-003", "ah-004"] as const;
 
 const DEMO_SESSION_ID = "clarity-demo-alex-rivera";
 
@@ -187,7 +190,7 @@ export function getDemoSession(): ClaritySession {
     id: DEMO_SESSION_ID,
     updatedAt: now,
     intake,
-    intakeInferredStepIds: [],
+    intakePrefilledStepIds: [],
     intakeConfirmedStepIds: [],
     lifestyle: DEMO_LIFESTYLE,
     brainDump: DEMO_BRAIN_DUMP,
@@ -201,11 +204,11 @@ export function getDemoSession(): ClaritySession {
   return session;
 }
 
-/** Persist demo session and reload (browser only). */
+/** Hand off a demo-ready session via the one-shot key, then navigate to `/summary`. */
 export function applyDemoSession(): void {
   if (typeof window === "undefined") return;
   try {
-    sessionStorage.setItem(CLARITY_STORAGE_KEY, JSON.stringify(getDemoSession()));
+    writeDemoOneShot(getDemoSession());
     window.location.assign("/summary");
   } catch {
     /* quota */
@@ -220,6 +223,7 @@ export const DEMO_SCREEN_ORDER = [
   "Daily rhythms — quick believable numbers",
   "Reflection — AI summary + readiness + lifestyle panel",
   "Matches — explain ordering + open top card",
+  "Practice session — rehearse opening lines (not therapy)",
   "Prep sheet — print / PDF differentiator",
   "Closing — next steps + 988",
 ] as const;

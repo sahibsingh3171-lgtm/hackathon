@@ -9,7 +9,20 @@ import { TherapyPrepSheetDocument } from "@/components/clarity/TherapyPrepSheetD
 import { StepShell } from "@/components/clarity/StepShell";
 import { useClaritySession } from "@/contexts/clarity-session-context";
 import { buildPrepSheet } from "@/lib/clarity/prep-sheet";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+const browseMatchesAside = (
+  <Link
+    href="/matches"
+    className={cn(
+      buttonVariants({ variant: "outline" }),
+      "inline-flex h-auto min-h-11 shrink-0 rounded-2xl border-border/70 px-4 py-2.5 text-sm font-medium text-foreground/90 shadow-none hover:bg-muted/50"
+    )}
+  >
+    Browse your matches
+  </Link>
+);
 
 export default function PrepSheetPage() {
   const router = useRouter();
@@ -25,14 +38,32 @@ export default function PrepSheetPage() {
       path="/prep-sheet"
       title="Your prep sheet"
       subtitle="One page you can print, save as PDF, or read slowly before a first session — drawn from your reflection and the structured read above."
-      onBack={() => router.push("/matches")}
+      onBack={() => router.push("/practice-session")}
       onNext={() => router.push("/next-steps")}
       nextDisabled={!sheet}
       nextLabel="Gentle wrap-up"
       maxWidthClass="max-w-3xl"
       calmProgress
+      footerAside={browseMatchesAside}
     >
       <div className="no-print mb-10 space-y-4 rounded-[1.75rem] border border-border/80 bg-muted/20 px-6 py-6 sm:px-8">
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          Want to rehearse how you might open first?{" "}
+          <Link
+            href="/practice-session"
+            className="font-medium text-primary underline decoration-primary/35 underline-offset-2"
+          >
+            Practice session
+          </Link>{" "}
+          — short prompts and sample lines from your reflection, not therapy itself. You can always{" "}
+          <Link
+            href="/matches"
+            className="font-medium text-primary underline decoration-primary/35 underline-offset-2"
+          >
+            browse your matches
+          </Link>{" "}
+          again from here.
+        </p>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="font-heading text-base font-semibold text-foreground">Print or save</p>

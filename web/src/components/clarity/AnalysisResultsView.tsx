@@ -8,6 +8,7 @@ import {
   Leaf,
   MessageCircleQuestion,
   Sparkles,
+  Theater,
   Waves,
 } from "lucide-react";
 
@@ -407,27 +408,41 @@ export function AnalysisResultsView({
           Sample profiles ordered from what you shared — a demo sketch of a search, not a real
           directory or a promise of the right person.
         </p>
-        <div className="relative mt-9 flex flex-wrap gap-3 sm:gap-4">
+        <div className="relative mt-9 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
           <Link
             href="/matches"
             className={cn(
               buttonVariants({ variant: "default" }),
-              "inline-flex h-auto items-center rounded-2xl px-7 py-3.5 text-sm font-semibold shadow-clarity-soft"
+              "inline-flex h-auto items-center justify-center rounded-2xl px-7 py-3.5 text-sm font-semibold shadow-clarity-soft"
             )}
           >
             Browse sample matches
             <ArrowRight className="ml-2 size-4" aria-hidden />
           </Link>
           <Link
+            href="/practice-session"
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "inline-flex h-auto items-center justify-center gap-2 rounded-2xl border-border px-6 py-3.5 text-sm font-semibold"
+            )}
+          >
+            <Theater className="size-4 text-primary/85" aria-hidden />
+            Practice first-session lines
+          </Link>
+          <Link
             href="/prep-sheet"
             className={cn(
               buttonVariants({ variant: "outline" }),
-              "inline-flex h-auto items-center rounded-2xl border-border px-6 py-3.5"
+              "inline-flex h-auto items-center justify-center rounded-2xl border-border px-6 py-3.5 text-sm font-medium"
             )}
           >
             Open prep sheet
           </Link>
         </div>
+        <p className="relative mt-4 max-w-xl text-xs leading-relaxed text-muted-foreground">
+          “Practice first-session lines” is a short rehearsal from your own reflection — not an AI
+          therapist and not treatment. Your prep sheet is still the printable snapshot for the visit.
+        </p>
       </section>
 
       {/* Trust & limits */}
