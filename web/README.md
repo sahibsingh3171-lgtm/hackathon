@@ -1,18 +1,12 @@
-# Web app (`web/`)
+# Clarity (`web/`)
 
-**→ Codebase map (features, APIs, traceability): [`docs/CODEMAP.md`](docs/CODEMAP.md)**  
-Folder labels: each major directory under `src/` has a short `README.md`.
+Next.js App Router, TypeScript, Tailwind v4, and shadcn-style UI. Clarity is a therapy **readiness** flow (brain dump → intake → lifestyle → reflection → matches → practice → prep → next steps). It’s a demo build: mock therapist data, no real bookings, no auth.
 
-Next.js (App Router) frontend for the hackathon: **TypeScript**, **Tailwind CSS v4**, **shadcn/ui** (base-nova preset), and **Clarity** design tokens (Inter body, Fraunces headings, optional JetBrains Mono).
+**Where things live:** [`docs/CODEMAP.md`](docs/CODEMAP.md). For a quicker file list by feature, see [`src/features/`](src/features/) — each subfolder has a short README.
 
-## Prerequisites
+## Run locally
 
-- **Node.js** LTS (18+ or 20+)
-- **npm** (this repo uses `package-lock.json` only — do not mix pnpm/yarn/bun for installs)
-
-## Local setup
-
-From the **repository root**:
+Need Node 18+ and npm.
 
 ```bash
 cd web
@@ -21,74 +15,27 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+App: [http://localhost:3000](http://localhost:3000).
 
-Edit marketing copy in `src/app/(marketing)/page.tsx`, the Clarity flow under `src/app/(flow)/`, shared chrome in `src/components/layout/`, and root `src/app/layout.tsx`. Design tokens live in `src/app/globals.css`.
+Copy `.env.example` to `.env.local` and fill in what you use. Anything named `NEXT_PUBLIC_*` is visible in the browser; API keys (e.g. OpenAI) stay server-side and are read from Route Handlers under `src/app/api/clarity/` — see `src/lib/env.ts`.
 
-### Environment variables
+## Useful paths
 
-- Copy **`.env.example` → `.env.local`** (never commit secrets).
-- **`NEXT_PUBLIC_*`** variables are exposed to the browser; keep service keys server-only.
-- For future Supabase wiring, read public config via `src/lib/env.ts` (`getSupabasePublicConfig()` returns `null` if unset; use `assertSupabasePublicConfig()` only when the feature truly requires Supabase).
+- **Pages:** `src/app/(marketing)/` (landing), `src/app/(flow)/` (wizard routes)  
+- **API routes:** `src/app/api/clarity/` — server-only; call OpenAI from here  
+- **Prompts & parsers:** `src/lib/ai/`  
+- **Matching (heuristic):** `src/lib/therapist/`  
+- **Session + domain logic:** `src/lib/clarity/`, `src/contexts/`, `src/types/`  
+- **Mock therapists:** `src/data/`  
 
-## Project layout (MVP)
-
-For a **judge-ready walkthrough** (brain dump → API → prompts → matching), see **[`docs/CODEMAP.md`](docs/CODEMAP.md)**.
-
-| Area | Path |
-|------|------|
-| **Routes** | `src/app/layout.tsx` + `globals.css` · `(marketing)/` landing · `(flow)/` wizard · `api/clarity/summary` |
-| **Layout shell** | `src/components/layout/` — `AppShell`, `AppProviders` (session; **no auth**) |
-| **Product UI** | `src/components/clarity/` |
-| **Primitives** | `src/components/ui/` |
-| **Mock data** | `src/data/` |
-| **AI** | `src/lib/ai/` |
-| **Matching** | `src/lib/therapist/` |
-| **Validation** | `src/lib/validation/` |
-| **Domain** | `src/lib/clarity/` + `src/contexts/` + `src/types/` |
-| **Feature entry points (judge map)** | `src/features/` — one folder per area; `README.md` + optional `index.ts` re-exports |
-
-## Stack (this folder)
-
-| Piece | Location / notes |
-|--------|------------------|
-| App Router | `src/app/` — route groups `(marketing)`, `(flow)` |
-| shadcn/ui | `src/components/ui/`, `components.json`, `@/lib/utils` (`cn`) |
-| Tailwind v4 | `postcss.config.mjs`, `src/app/globals.css` (`@import "tailwindcss"`) |
-| Path alias | `@/*` → `src/*` (`tsconfig.json`) |
-
-### Add more shadcn components (sparingly)
-
-```bash
-cd web
-npx shadcn@latest add dialog
-```
-
-Install only what you need for the demo; start from **Button** + **Card** (already present).
+Path alias: `@/*` → `src/*` (`tsconfig.json`).
 
 ## Scripts
 
-| Command | Purpose |
-|---------|---------|
-| `npm run dev` | Dev server |
-| `npm run build` | Production build |
-| `npm run start` | Run production build locally |
-| `npm run lint` | ESLint |
+- `npm run dev` — dev server  
+- `npm run build` / `npm run start` — production build and run  
+- `npm run lint` — ESLint  
 
-## Deploy on Vercel
+## Deploy (Vercel)
 
-1. Import this Git repo into Vercel.
-2. Set **Root Directory** to **`web`** (the Next.js app is not at the monorepo root).
-3. Add environment variables from `.env.example` in the Vercel project **Settings → Environment Variables** (same names as locally).
-4. Deploy. You do **not** need a `vercel.json` for a standard Next.js app unless you add redirects, headers, or custom routing.
-
-### Vercel checklist
-
-- **Root Directory = `web`** — required if the repo stays structured with the app in a subfolder.
-- **Install command**: default `npm install` at `web/` is correct.
-- **Build command**: default `next build` is correct.
-- **Output**: Next.js is handled by Vercel’s Next integration — no manual `output` directory.
-
-## CI / quality (optional for hackathon)
-
-Skipping GitHub Actions, Prettier, and extra scripts is fine for a short event. Run `npm run build` before you push if you want a safety check.
+Set the project **Root Directory** to **`web`**. Add the same env vars you use locally. You usually don’t need a custom `vercel.json` for a standard Next deploy.
