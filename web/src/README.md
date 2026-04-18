@@ -4,6 +4,7 @@
 
 | Folder | Role |
 |--------|------|
+| `features/` | **Judge-friendly bundles** — one folder per product area (`README.md` + thin `index.ts` re-exports); see `features/README.md` |
 | `app/` | Next.js App Router: **pages**, **layouts**, and **Route Handlers** (`api/`) — server + client entry points |
 | `components/` | React UI (product, marketing, layout shell, shadcn primitives) |
 | `contexts/` | Client-side global state (Clarity session) |

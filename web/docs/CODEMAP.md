@@ -4,6 +4,31 @@ This document is the **single orientation point** for the Next.js app in `web/`.
 
 ---
 
+## One-folder entry points (`src/features/`)
+
+For demos, open **`src/features/README.md`** — each subfolder groups one concern:
+
+- **`README.md`** in that folder = **every related file** (UI, API, prompts).
+- **`index.ts`** (where present) = **re-exports only** — same implementation as `hooks/`, `lib/`, `data/`; no duplicate logic. Optional imports like `import { useVoiceDictation } from "@/features/voice-audio"`.
+
+| Folder | Covers |
+|--------|--------|
+| `voice-audio` | Dictation hook + transcription route |
+| `matching-filters` | Rank / score / sort (`lib/therapist`) |
+| `therapist-directory` | Mock profiles + filter taxonomies |
+| `intake-adaptive` | Due-step questionnaire logic |
+| `brain-dump-extraction` | LLM extraction + canonical merge |
+| `lifestyle-checkin` | Lifestyle from intake |
+| `ai-summary` | Summary prompt + parse + mock |
+| `readiness-support` | Readiness prompts + contract + crisis layer |
+| `crisis-safety` | Heuristics + crisis copy + panel state |
+| `prep-sheet` | Prep sheet builder |
+| `practice-session` | Practice prompts + conversation helpers |
+| `marketing-landing` | Landing file list (no `index.ts`) |
+| `session-state` | Session context + persistence paths (README only) |
+
+---
+
 ## Architecture at a glance
 
 ```

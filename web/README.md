@@ -46,6 +46,7 @@ For a **judge-ready walkthrough** (brain dump → API → prompts → matching),
 | **Matching** | `src/lib/therapist/` |
 | **Validation** | `src/lib/validation/` |
 | **Domain** | `src/lib/clarity/` + `src/contexts/` + `src/types/` |
+| **Feature entry points (judge map)** | `src/features/` — one folder per area; `README.md` + optional `index.ts` re-exports |
 
 ## Stack (this folder)
 
