@@ -22,6 +22,7 @@
 
 # misc
 .DS_Store
+Thumbs.db
 *.pem
 
 # debug
@@ -30,13 +31,17 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files — keep secrets out of git; commit `.env.example` only
+# Local env & API keys — never commit real values; only `.env.example` (placeholders).
 .env*
 !.env.example
+.envrc
+.direnv/
 
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+
+# eslint (flat config may write a cache in the project root)
+.eslintcache

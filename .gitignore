@@ -17,8 +17,19 @@ venv/
 dist/
 build/
 
-# Secrets (never commit)
+# Secrets & env (never commit)
+# Root `.env` alone does not match `web/.env` — use broad patterns for nested apps.
 *.pem
-.env
-.env.local
-.env.*.local
+*.p12
+.env*
+!.env.example
+!**/.env.example
+.envrc
+.direnv/
+
+# Accidental credential / key dumps (common filenames)
+*credentials*.json
+*service-account*.json
+*service_account*.json
+secrets*.json
+*-firebase-adminsdk*.json
