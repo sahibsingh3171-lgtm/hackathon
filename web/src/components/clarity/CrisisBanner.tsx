@@ -24,13 +24,13 @@ export function CrisisBanner() {
     <div
       role="alert"
       className={cn(
-        "border-b px-clarity-section-x py-4",
+        "border-b px-4 py-5 sm:px-8",
         urgent
           ? "border-[var(--clarity-urgent-line)] bg-[var(--clarity-urgent-bg)]"
           : "border-[var(--clarity-elevated-line)] bg-[var(--clarity-elevated-bg)]"
       )}
     >
-      <div className="relative mx-auto flex max-w-3xl gap-4">
+      <div className="relative mx-auto flex max-w-4xl gap-5 sm:gap-6">
         <LifeBuoy
           className={cn(
             "mt-0.5 size-5 shrink-0",
@@ -80,7 +80,7 @@ export function CrisisBanner() {
           size="icon"
           className="absolute top-0 right-0 h-9 w-9 shrink-0 text-muted-foreground hover:bg-muted"
           onClick={dismissCrisisBanner}
-          aria-label="Dismiss crisis resources banner"
+          aria-label="Dismiss support banner"
         >
           <X className="size-4" />
         </Button>

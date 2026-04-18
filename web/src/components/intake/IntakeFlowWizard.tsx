@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { DisclaimerBlock } from "@/components/clarity/DisclaimerBlock";
 import { LikertScale } from "@/components/clarity/LikertScale";
@@ -12,6 +12,11 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { useClaritySession } from "@/contexts/clarity-session-context";
+import {
+  computeDueIntakeStepIndices,
+  humanLabelsForInferredSteps,
+  nextDueCursorAfterAdvance,
+} from "@/lib/clarity/intake-due-steps";
 import {
   BUDGET_RANGE_OPTIONS,
   INSURANCE_OPTIONS,
@@ -24,6 +29,7 @@ import {
 import {
   buildLifestyleFromIntake,
   buildMatchPreferencesFromIntake,
+  isIntakeFlowComplete,
   validateIntakeStep,
 } from "@/lib/clarity/intake-flow-validation";
 import type { ClaritySession, IntakeAnswers, Likert } from "@/types/clarity";
@@ -33,8 +39,9 @@ function patchIntake(prev: IntakeAnswers, patch: Partial<IntakeAnswers>): Intake
   return { ...prev, ...patch };
 }
 
-function clampIntakeStep(saved: number | undefined): number {
-  const max = INTAKE_FLOW_STEP_TOTAL - 1;
+function clampDueCursor(saved: number | undefined, dueLen: number): number {
+  if (dueLen <= 0) return 0;
+  const max = dueLen - 1;
   if (typeof saved !== "number" || !Number.isFinite(saved)) return 0;
   return Math.min(Math.max(0, Math.floor(saved)), max);
 }
@@ -46,23 +53,72 @@ export function IntakeFlowWizard() {
   const [panelVisible, setPanelVisible] = useState(true);
 
   const intake = session.intake;
-  const stepIdx = clampIntakeStep(intake.intakeFlowStep);
-  const step = INTAKE_FLOW_STEPS[stepIdx];
-  const progressPct = Math.round(((stepIdx + 1) / INTAKE_FLOW_STEP_TOTAL) * 100);
-  const isLast = stepIdx >= INTAKE_FLOW_STEP_TOTAL - 1;
-  const validCurrent = step ? validateIntakeStep(stepIdx, intake) : false;
+  const due = useMemo(
+    () =>
+      computeDueIntakeStepIndices(
+        intake,
+        session.intakeInferredStepIds,
+        session.intakeConfirmedStepIds
+      ),
+    [intake, session.intakeInferredStepIds, session.intakeConfirmedStepIds]
+  );
 
-  const bumpStep = useCallback((next: number) => {
-    setPanelVisible(false);
-    window.setTimeout(() => {
-      setSession((prev: ClaritySession) => ({
+  const cursor = clampDueCursor(intake.intakeFlowStep, due.length);
+  const stepIdx = due[cursor] ?? 0;
+  const step = INTAKE_FLOW_STEPS[stepIdx];
+  const progressPct =
+    due.length > 0 ? Math.round(((cursor + 1) / due.length) * 100) : 100;
+  const validCurrent = step ? validateIntakeStep(stepIdx, intake) : false;
+  const inferredIds = session.intakeInferredStepIds ?? [];
+  const isSuggestedStep = step ? inferredIds.includes(step.id) : false;
+  const listenedFirst = inferredIds.length > 0;
+  const shorterPass = listenedFirst && due.length < INTAKE_FLOW_STEP_TOTAL;
+
+  useEffect(() => {
+    if (!hydrated || due.length > 0) return;
+    if (isIntakeFlowComplete(intake)) {
+      router.replace("/lifestyle");
+    }
+  }, [due.length, hydrated, intake, router]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    const d = computeDueIntakeStepIndices(
+      intake,
+      session.intakeInferredStepIds,
+      session.intakeConfirmedStepIds
+    );
+    if (d.length === 0) return;
+    const c = clampDueCursor(intake.intakeFlowStep, d.length);
+    if (c !== intake.intakeFlowStep) {
+      setSession((prev) => ({
         ...prev,
-        intake: patchIntake(prev.intake, { intakeFlowStep: next }),
+        intake: patchIntake(prev.intake, { intakeFlowStep: c }),
       }));
-      setAttempted(false);
-      setPanelVisible(true);
-    }, 220);
-  }, [setSession]);
+    }
+  }, [
+    hydrated,
+    intake,
+    session.intakeConfirmedStepIds,
+    session.intakeInferredStepIds,
+    intake.intakeFlowStep,
+    setSession,
+  ]);
+
+  const bumpStep = useCallback(
+    (nextCursor: number) => {
+      setPanelVisible(false);
+      window.setTimeout(() => {
+        setSession((prev: ClaritySession) => ({
+          ...prev,
+          intake: patchIntake(prev.intake, { intakeFlowStep: nextCursor }),
+        }));
+        setAttempted(false);
+        setPanelVisible(true);
+      }, 280);
+    },
+    [setSession]
+  );
 
   const updateIntake = useCallback(
     (patch: Partial<IntakeAnswers>) => {
@@ -75,80 +131,155 @@ export function IntakeFlowWizard() {
   );
 
   const onBack = useCallback(() => {
-    if (stepIdx <= 0) {
-      router.push("/");
+    if (cursor <= 0) {
+      router.push("/brain-dump");
       return;
     }
-    bumpStep(stepIdx - 1);
-  }, [bumpStep, router, stepIdx]);
+    bumpStep(cursor - 1);
+  }, [bumpStep, cursor, router]);
 
   const onNext = useCallback(() => {
-    if (!step) return;
+    if (!step || due.length === 0) return;
     if (!validateIntakeStep(stepIdx, intake)) {
       setAttempted(true);
       return;
     }
-    if (isLast) {
-      setSession((prev: ClaritySession) => {
-        const merged = prev.intake;
+
+    setSession((prev: ClaritySession) => {
+      const prevIntake = prev.intake;
+      const stepMeta = INTAKE_FLOW_STEPS[stepIdx];
+      const confirmed = new Set(prev.intakeConfirmedStepIds ?? []);
+      if (stepMeta && (prev.intakeInferredStepIds ?? []).includes(stepMeta.id)) {
+        confirmed.add(stepMeta.id);
+      }
+
+      const dueAfter = computeDueIntakeStepIndices(
+        prevIntake,
+        prev.intakeInferredStepIds,
+        Array.from(confirmed)
+      );
+
+      if (dueAfter.length === 0) {
+        queueMicrotask(() => router.push("/lifestyle"));
         return {
           ...prev,
-          intake: patchIntake(merged, { intakeFlowStep: INTAKE_FLOW_STEP_TOTAL - 1 }),
-          lifestyle: buildLifestyleFromIntake(merged),
-          matchPreferences: buildMatchPreferencesFromIntake(merged),
+          intake: patchIntake(prevIntake, { intakeFlowStep: 0 }),
+          intakeConfirmedStepIds: Array.from(confirmed),
+          lifestyle: buildLifestyleFromIntake(prevIntake),
+          matchPreferences: buildMatchPreferencesFromIntake(prevIntake),
         };
-      });
-      router.push("/lifestyle");
-      return;
-    }
-    bumpStep(stepIdx + 1);
-  }, [bumpStep, intake, isLast, router, setSession, step, stepIdx]);
+      }
+
+      const nextCursor = nextDueCursorAfterAdvance(dueAfter, stepIdx);
+      return {
+        ...prev,
+        intake: patchIntake(prevIntake, { intakeFlowStep: nextCursor }),
+        intakeConfirmedStepIds: Array.from(confirmed),
+      };
+    });
+  }, [due.length, intake, router, setSession, step, stepIdx]);
 
   const showError = attempted && !validCurrent;
 
   if (!hydrated || !step) {
     return (
       <div className="mx-auto flex min-h-[50vh] max-w-xl items-center justify-center px-clarity-section-x">
-        <p className="text-sm text-muted-foreground">Loading your session…</p>
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      </div>
+    );
+  }
+
+  if (due.length === 0) {
+    return (
+      <div className="mx-auto flex min-h-[40vh] max-w-xl flex-col items-center justify-center gap-3 px-clarity-section-x">
+        <p className="text-sm font-medium text-foreground/90">Almost there…</p>
+        <p className="max-w-xs text-center text-xs leading-relaxed text-muted-foreground">
+          Finishing this step on your device.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col px-clarity-section-x py-clarity-section-y sm:px-8 lg:py-12">
+    <div className="mx-auto flex w-full max-w-xl flex-col px-4 py-10 sm:px-8 sm:py-12 lg:py-14">
       <div className="mb-8 space-y-4">
         <div className="flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          <span>Check-in</span>
+          <span>{shorterPass ? "Follow-up" : "Check-in"}</span>
           <span className="tabular-nums">
-            {stepIdx + 1} / {INTAKE_FLOW_STEP_TOTAL}
+            {cursor + 1} / {due.length}
           </span>
         </div>
         <Progress value={progressPct} className="h-1.5 bg-muted" />
         <p className="text-xs leading-relaxed text-muted-foreground">
-          This flow borrows themes from common screening tools — Clarity does not diagnose or score you
-          clinically.
+          {listenedFirst ? (
+            <>
+              You wrote in your own words first. These screens only ask for what is still open — edit
+              freely; nothing is locked in. Some items echo familiar self-reflection prompts, not a
+              diagnosis or a clinical score.
+            </>
+          ) : (
+            <>
+              A calm, one-at-a-time pass through mood, stress, sleep, and practical details. A few
+              items echo familiar self-reflection prompts — for your own context, not a diagnosis or a
+              clinical score.
+            </>
+          )}
         </p>
       </div>
 
-      {stepIdx < 3 ? (
+      {cursor < 2 ? (
         <div className="mb-8">
           <DisclaimerBlock variant="inline" />
+        </div>
+      ) : null}
+
+      {listenedFirst && cursor === 0 ? (
+        <div
+          className="mb-8 space-y-3 rounded-2xl border border-border/70 bg-gradient-to-b from-muted/25 to-muted/10 px-5 py-5 shadow-clarity-soft sm:px-6"
+          aria-labelledby="gentle-read-heading"
+        >
+          <p
+            id="gentle-read-heading"
+            className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground"
+          >
+            A gentle read of your note
+          </p>
+          <p className="text-sm leading-relaxed text-foreground">
+            Nothing here is a verdict — we loosely matched a few questionnaire spots so you face less
+            empty space. You will walk each one in a moment; change anything that does not feel like
+            you.
+          </p>
+          <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+            Tentatively touched
+          </p>
+          <ul className="list-inside list-disc space-y-1.5 text-sm leading-relaxed text-muted-foreground">
+            {humanLabelsForInferredSteps(inferredIds).map((row) => (
+              <li key={row.id}>{row.label}</li>
+            ))}
+          </ul>
         </div>
       ) : null}
 
       <div
         key={step.id}
         className={cn(
-          "space-y-8 transition-[opacity,transform] duration-300 ease-out motion-reduce:transition-none",
-          panelVisible ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"
+          "space-y-8 transition-[opacity,transform] duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+          panelVisible ? "translate-y-0 opacity-100" : "translate-y-1.5 opacity-0"
         )}
       >
         <header className="space-y-4">
+          {isSuggestedStep ? (
+            <p className="rounded-2xl border border-border/80 bg-muted/20 px-4 py-3 text-sm leading-relaxed text-foreground">
+              <span className="font-medium text-foreground">Light draft.</span> This answer was loosely
+              drawn from your opening note — adjust or clear it before you continue. It only sticks
+              because you let it.
+            </p>
+          ) : null}
           {step.field === "phq9_item" && step.itemIndex === 1 ? (
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Reflection set A</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Mood & energy</p>
           ) : null}
           {step.field === "gad7_item" && step.itemIndex === 1 ? (
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Reflection set B</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Worry & tension</p>
           ) : null}
           <h1 className="font-heading text-2xl font-semibold leading-snug tracking-tight text-foreground sm:text-3xl">
             {step.title}
@@ -169,20 +300,20 @@ export function IntakeFlowWizard() {
 
       <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-8">
         <Button type="button" variant="ghost" className="text-muted-foreground" onClick={onBack}>
-          {stepIdx === 0 ? "Exit to home" : "Back"}
+          {cursor === 0 ? (listenedFirst ? "Return to your note" : "Back") : "Back"}
         </Button>
         <Button
           type="button"
           onClick={onNext}
           className="h-auto min-h-11 rounded-2xl bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground shadow-clarity-soft hover:bg-primary/90"
         >
-          {isLast ? "Continue to daily rhythms" : "Continue"}
+          {cursor === due.length - 1 ? "Continue to rhythms" : "Continue"}
         </Button>
       </div>
 
-      {!isLast && stepIdx > 2 ? (
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          Your answers save as you go on this device.
+      {(due.length > 1 && cursor > 0) || (listenedFirst && cursor === 0) ? (
+        <p className="mt-6 text-center text-xs leading-relaxed text-muted-foreground">
+          Your answers stay on this device as you go.
         </p>
       ) : null}
     </div>
@@ -216,7 +347,7 @@ function StepBody({
           />
           {showError ? (
             <p className="text-sm text-destructive" role="alert">
-              A few more words help — aim for at least one short sentence you mean.
+              A sentence or two more helps — write what feels true, even if it is incomplete.
             </p>
           ) : null}
         </div>
@@ -257,7 +388,7 @@ function StepBody({
               <a className="font-semibold underline underline-offset-2" href="tel:988">
                 988
               </a>{" "}
-              (U.S.) or your local emergency number. Clarity is not a crisis service.
+              in the U.S., or your local emergency number. Clarity cannot provide crisis support.
             </p>
           ) : null}
         </div>
@@ -305,7 +436,7 @@ function StepBody({
           </div>
           {showError ? (
             <p className="text-sm text-destructive" role="alert">
-              Choose at least one that fits — or the one that fits most.
+              Tap whichever tags feel closest — at least one helps us frame the rest gently.
             </p>
           ) : null}
         </div>
@@ -440,7 +571,7 @@ function StepBody({
           />
           {showError ? (
             <p className="text-sm text-destructive" role="alert">
-              A sentence or two more helps your future therapist understand what “better” could mean.
+              A little more here helps a future therapist sense what “better” might mean for you.
             </p>
           ) : null}
         </div>
@@ -487,7 +618,7 @@ function ChoiceGrid({
       </div>
       {showError ? (
         <p className="text-sm text-destructive" role="alert">
-          Please choose one option to continue.
+          Choose one option to continue when you are ready.
         </p>
       ) : null}
     </div>

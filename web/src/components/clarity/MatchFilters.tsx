@@ -5,13 +5,17 @@ import { ALL_INSURANCE, ALL_SPECIALTIES } from "@/data/therapists";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 export function MatchFilters({
   value,
   onChange,
+  className,
 }: {
   value: MatchPreferences;
   onChange: (next: MatchPreferences) => void;
+  /** Optional wrapper classes (e.g. editorial spacing on the matches page). */
+  className?: string;
 }) {
   const toggleSpecialty = (s: string) => {
     const set = new Set(value.specialties);
@@ -28,9 +32,14 @@ export function MatchFilters({
   };
 
   return (
-    <div className="space-y-6 rounded-3xl border border-border bg-card p-6 shadow-clarity-soft">
+    <div
+      className={cn(
+        "space-y-7 rounded-3xl border border-border/45 bg-card p-8 shadow-sm ring-1 ring-foreground/[0.02] backdrop-blur-sm sm:p-9",
+        className
+      )}
+    >
       <div className="space-y-2">
-        <Label className="text-foreground">Max budget (USD / session, mock)</Label>
+        <Label className="text-foreground">Max budget per session (USD, sample)</Label>
         <Input
           type="number"
           min={0}
@@ -45,6 +54,26 @@ export function MatchFilters({
           }}
           className="max-w-xs rounded-xl border-border bg-muted/30"
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-foreground">Location preference (optional)</Label>
+        <Input
+          type="text"
+          placeholder="e.g. TX, Seattle, or Remote"
+          value={value.locationPreference ?? ""}
+          onChange={(e) => {
+            const v = e.target.value.trim();
+            onChange({
+              ...value,
+              locationPreference: v === "" ? undefined : v,
+            });
+          }}
+          className="max-w-xs rounded-xl border-border bg-muted/30"
+        />
+        <p className="text-xs text-muted-foreground">
+          Loosely compared to sample profile locations — not GPS or exact matching.
+        </p>
       </div>
 
       <div className="space-y-2">
@@ -63,7 +92,7 @@ export function MatchFilters({
       </div>
 
       <div className="space-y-2">
-        <Label className="text-foreground">Focus areas (tap to toggle)</Label>
+        <Label className="text-foreground">Focus areas</Label>
         <div className="flex flex-wrap gap-2">
           {ALL_SPECIALTIES.map((s) => {
             const on = value.specialties.includes(s);
@@ -88,7 +117,7 @@ export function MatchFilters({
       </div>
 
       <div className="space-y-2">
-        <Label className="text-foreground">Insurance tags (mock)</Label>
+        <Label className="text-foreground">Insurance (sample tags)</Label>
         <div className="flex flex-wrap gap-2">
           {ALL_INSURANCE.map((s) => {
             const on = value.insurance.includes(s);

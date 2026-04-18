@@ -66,32 +66,38 @@ export function buildMockSummary(input: {
   const phq = sumPhq9(input.intake);
   const gad = sumGad7(input.intake);
 
-  const themes: string[] = [];
+  const keyThemeLines: string[] = [];
+  const chipThemes = input.brainDump?.themes?.filter(Boolean) ?? [];
+  if (chipThemes.length) {
+    keyThemeLines.push(`Themes you tapped: ${chipThemes.join(", ")}`);
+  }
   if (phq.count >= 6 && phq.total >= 10) {
-    themes.push("Low mood, energy, or interest may have been persistent in what you reported");
+    keyThemeLines.push("Low mood, energy, or interest may have been persistent in what you reported");
   }
   if (gad.count >= 5 && gad.total >= 8) {
-    themes.push("Worry, tension, or restlessness show up often in your answers");
+    keyThemeLines.push("Worry, tension, or restlessness show up often in your answers");
   }
   if (input.lifestyle?.stressLevel && input.lifestyle.stressLevel >= 4) {
-    themes.push("Day-to-day stress feels high in your snapshot");
+    keyThemeLines.push("Day-to-day stress feels high in your snapshot");
   }
   if (
     input.lifestyle?.sleepHoursApprox != null &&
     input.lifestyle.sleepHoursApprox < 6
   ) {
-    themes.push("Sleep may be a meaningful piece of the picture right now");
+    keyThemeLines.push("Sleep may be a meaningful piece of the picture right now");
   }
   const dump = input.brainDump?.text?.trim();
-  if (dump) themes.push("Your own words add texture beyond any checklist");
+  if (dump) keyThemeLines.push("Your own words add texture beyond any checklist");
 
-  if (themes.length === 0) themes.push("You are taking a thoughtful look at how you have been doing");
+  if (keyThemeLines.length === 0) {
+    keyThemeLines.push("You are taking a thoughtful look at how you have been doing");
+  }
 
   const tags = deriveTags(input, load);
 
   return {
     headline: "A gentle read on what you shared",
-    keyThemes: themes.slice(0, 5),
+    keyThemes: keyThemeLines.slice(0, 5),
     therapyReadiness: readiness,
     rationaleBullets: [
       "What you captured could be a helpful starting point for a licensed therapist.",
@@ -141,6 +147,11 @@ function deriveTags(
     if (stressTags.includes("relationship_stress")) tags.push("relationships");
     if (stressTags.includes("grief")) tags.push("other");
   }
+
+  const brainChips = input.brainDump?.themes ?? [];
+  if (brainChips.includes("anxiety")) tags.push("anxiety");
+  if (brainChips.includes("relationships")) tags.push("relationships");
+  if (brainChips.includes("burnout") || brainChips.includes("work")) tags.push("stress");
 
   if (/partner|relationship|family|marriage/.test(text)) tags.push("relationships");
   if (/alcohol|substance|drink|weed|drug/.test(text)) tags.push("substance");

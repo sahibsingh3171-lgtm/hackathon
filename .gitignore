@@ -3,6 +3,7 @@
 Thumbs.db
 
 # Editor / tooling
+.cursor/
 .idea/
 .vscode/
 *.swp

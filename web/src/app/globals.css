@@ -153,6 +153,8 @@
   --clarity-section-x: 1.5rem;
   --clarity-loose: 2rem;
   --clarity-tight: 0.75rem;
+  /* Comfortable reading width for long-form / results */
+  --clarity-measure: 42rem;
 }
 
 @theme inline {
@@ -213,19 +215,33 @@
 /* App canvas: warm, minimal texture (no mesh / neon) */
 .clarity-canvas {
   background-color: var(--clarity-canvas);
-  background-image: radial-gradient(
-    ellipse 120% 80% at 50% -20%,
-    rgb(255 255 255 / 0.55),
-    transparent 55%
-  );
+  background-image:
+    radial-gradient(ellipse 100% 60% at 50% -15%, rgb(255 255 255 / 0.72), transparent 52%),
+    radial-gradient(ellipse 70% 45% at 100% 50%, rgb(111 143 120 / 0.04), transparent 50%);
+}
+
+@layer components {
+  /* Marketing + chrome: consistent horizontal rhythm */
+  .clarity-container {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-8 lg:px-10;
+  }
+
+  .clarity-kicker {
+    @apply text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground;
+  }
 }
 
 /* Elevated surface */
 .clarity-surface {
   background: var(--clarity-surface);
-  border: 1px solid color-mix(in srgb, var(--clarity-line) 85%, transparent);
-  border-radius: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--clarity-line) 70%, transparent);
+  border-radius: 1.75rem;
   box-shadow: var(--shadow-clarity-card), var(--shadow-clarity-inner);
+}
+
+/* Optimal measure for reflection / results body copy */
+.clarity-measure {
+  max-width: var(--clarity-measure);
 }
 
 /* Primary CTA — solid sage, no gradient */
@@ -273,7 +289,11 @@
   h3,
   .font-heading {
     font-family: var(--font-heading);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
   }
 }
 
@@ -297,5 +317,20 @@
   .clarity-canvas {
     background: #fff !important;
     background-image: none !important;
+  }
+  .prep-sheet-print {
+    max-width: 100% !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0.55in 0.6in !important;
+    box-shadow: none !important;
+  }
+  .prep-sheet-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  @page {
+    margin: 0.5in;
   }
 }

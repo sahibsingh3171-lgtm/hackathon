@@ -3,7 +3,7 @@
  * Keep JSON-only response; no diagnoses or crisis “decisions.”
  */
 
-import type { IntakeAnswers } from "@/types/clarity";
+import type { BrainDump, IntakeAnswers } from "@/types/clarity";
 
 import { buildStructuredIntakeForAnalysis } from "@/lib/clarity/intake-flow-validation";
 
@@ -34,14 +34,15 @@ export function buildSummaryUserPayload(input: {
   brainDump: unknown;
 }): string {
   const intake = input.intake as IntakeAnswers;
+  const brainDump = (input.brainDump ?? null) as BrainDump | null;
   return JSON.stringify(
     {
       instruction:
         "Reflect themes only. Respond with JSON only as specified in system message.",
       intake,
-      intakeStructured: buildStructuredIntakeForAnalysis(intake),
+      intakeStructured: buildStructuredIntakeForAnalysis(intake, brainDump),
       lifestyle: input.lifestyle,
-      brainDump: input.brainDump,
+      brainDump,
     },
     null,
     0

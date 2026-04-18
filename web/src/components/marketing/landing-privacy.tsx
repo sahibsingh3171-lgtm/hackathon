@@ -2,42 +2,41 @@ import { Lock, Shield } from "lucide-react";
 
 export function LandingPrivacy() {
   return (
-    <section aria-labelledby="privacy-heading" className="py-16 sm:py-20 lg:py-24">
-      <div className="mx-auto max-w-6xl px-clarity-section-x sm:px-10">
-        <div className="clarity-surface rounded-[1.75rem] p-8 sm:p-10 lg:p-12">
-          <div className="grid gap-10 lg:grid-cols-2 lg:gap-14 lg:items-center">
+    <section aria-labelledby="privacy-heading" className="py-20 sm:py-24 lg:py-28">
+      <div className="clarity-container">
+        <div className="clarity-surface rounded-3xl p-8 sm:p-11 lg:p-12">
+          <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 lg:items-center">
             <div>
               <h2 id="privacy-heading" className="font-heading text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-                Privacy and trust, without the fine print theater
+                Privacy, said simply
               </h2>
               <p className="mt-5 text-base leading-relaxed text-muted-foreground">
-                We treat readiness work as sensitive by default. This demo keeps your flow in the
-                browser session — designed so judges can see the product without signing up for
-                another account they will forget.
+                What you share here matters. For this demo, your answers stay in the browser on this
+                device until you clear them — no account, no cloud save of your session by default.
               </p>
             </div>
-            <ul className="space-y-6">
-              <li className="flex gap-4">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-primary">
+            <ul className="space-y-8">
+              <li className="flex gap-5">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent/90 text-primary ring-1 ring-primary/10">
                   <Lock className="size-4" aria-hidden />
                 </span>
                 <div>
-                  <p className="font-heading text-base font-medium text-foreground">Session-first storage</p>
+                  <p className="font-heading text-base font-medium text-foreground">On this device</p>
                   <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                    Your answers stay on this device for the demo path — clear the session anytime
-                    from the header.
+                    Your flow is stored locally for the demo. You can start fresh anytime from the
+                    header.
                   </p>
                 </div>
               </li>
-              <li className="flex gap-4">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-primary">
+              <li className="flex gap-5">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent/90 text-primary ring-1 ring-primary/10">
                   <Shield className="size-4" aria-hidden />
                 </span>
                 <div>
-                  <p className="font-heading text-base font-medium text-foreground">Honest limits</p>
+                  <p className="font-heading text-base font-medium text-foreground">What we cannot do</p>
                   <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                    Clarity does not diagnose, treat, or monitor crises. For emergencies, use 988
-                    or local services — linked in the site footer.
+                    Clarity does not diagnose, treat, or watch over you in a crisis. If you need
+                    immediate help, use 988 or local services — links are in the footer.
                   </p>
                 </div>
               </li>

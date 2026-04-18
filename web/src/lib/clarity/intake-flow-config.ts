@@ -102,16 +102,16 @@ function buildSteps(): IntakeFlowStepMeta[] {
       id: "visit_reason",
       field: "visit_reason",
       title: "What brings you here today?",
-      subtitle: "A few honest words are enough.",
+      subtitle: "A few words you mean are enough.",
       microcopy:
-        "Fragments are welcome. This is not a test — there is no wrong answer, only what feels true for you right now.",
+        "Half-finished thoughts count. This is not a test — only what feels true for you today.",
     },
     {
       id: "overall_mood",
       field: "overall_mood",
       title: "Overall, how heavy or low have things felt this past week?",
-      subtitle: "A single snapshot, not a verdict.",
-      microcopy: "We use a simple scale so you can answer without explaining perfectly.",
+      subtitle: "One honest snapshot is enough.",
+      microcopy: "A simple scale so you can answer without having the full story figured out.",
     },
   ];
 
@@ -121,11 +121,12 @@ function buildSteps(): IntakeFlowStepMeta[] {
       field: "phq9_item",
       itemIndex: i + 1,
       title,
-      subtitle: "Inspired by common depression screening questions — Clarity does not score or diagnose.",
+      subtitle:
+        "Wording similar to questions clinicians sometimes use — for reflection here, not a diagnosis.",
       microcopy:
         i === 8
-          ? "If these thoughts feel active or urgent, please reach out to 988 or local emergency services — we care about your safety."
-          : "Take a breath. Choose the option that fits most days, not the worst moment.",
+          ? "If these thoughts feel present or urgent, please reach out now — in the U.S., call or text 988, or use your local emergency number."
+          : "Go with what fits most days, not only the hardest day.",
     });
   });
 
@@ -135,8 +136,9 @@ function buildSteps(): IntakeFlowStepMeta[] {
       field: "gad7_item",
       itemIndex: i + 1,
       title,
-      subtitle: "Inspired by common anxiety screening questions — for reflection with a professional, not a label.",
-      microcopy: "Rough estimates help you prepare — they do not define you.",
+      subtitle:
+        "Similar in spirit to questions about worry and tension — context for you and a future clinician, not a label.",
+      microcopy: "Rough honesty is enough; nothing here defines who you are.",
     });
   });
 
@@ -145,71 +147,71 @@ function buildSteps(): IntakeFlowStepMeta[] {
       id: "life_stress_tags",
       field: "life_stress_tags",
       title: "What else has been weighing on you?",
-      subtitle: "Choose any that apply — or none.",
-      microcopy: "Tap what resonates. You can change your mind later.",
+      subtitle: "Choose anything that lands — even roughly.",
+      microcopy: "If more than one fits, that is okay. You can revisit this anytime.",
     },
     {
       id: "sleep_hours_avg",
       field: "sleep_hours_avg",
       title: "On average, how many hours do you sleep per night?",
-      subtitle: "A ballpark number is perfect.",
-      microcopy: "Sleep affects everything else — we ask gently, without judgment.",
+      subtitle: "A rough average is fine.",
+      microcopy: "Sleep touches everything else — we ask without reading anything into a single number.",
     },
     {
       id: "screen_hours_avg",
       field: "screen_hours_avg",
       title: "Roughly how many hours a day are you on screens?",
-      subtitle: "Phone, laptop, TV — your honest guess.",
-      microcopy: "We never read your device. This is only what you choose to report.",
+      subtitle: "Phone, laptop, TV — your best guess.",
+      microcopy: "We do not access your devices; this is only what you choose to share.",
     },
     {
       id: "stress_overall",
       field: "stress_overall",
       title: "How intense does stress feel in your body most days?",
       subtitle: "Tension, racing thoughts, restlessness — however it shows up for you.",
-      microcopy: "There is no “right” level. We are mapping your lived experience.",
+      microcopy: "There is no correct answer — we are sketching how things feel in your body lately.",
     },
     {
       id: "therapy_history",
       field: "therapy_history",
       title: "What is your therapy history?",
-      subtitle: "Helps us frame suggestions without assuming.",
-      microcopy: "Every path — including none yet — is completely okay.",
+      subtitle: "So we do not assume where you are starting from.",
+      microcopy: "Never been, been before, or not sure — all of that is welcome.",
     },
     {
       id: "budget_range",
       field: "budget_range",
       title: "What per-session range feels realistic to explore?",
-      subtitle: "Illustrative only — real rates vary by region and clinician.",
-      microcopy: "Money should not be a shame topic when you are seeking care.",
+      subtitle: "A rough bracket — real fees depend on where you live and who you see.",
+      microcopy: "Cost is part of care; naming it here is practical, not something to feel bad about.",
     },
     {
       id: "insurance",
       field: "insurance",
       title: "How do you expect to pay for therapy?",
-      subtitle: "Rough sense is enough.",
-      microcopy: "You can refine this with any therapist you speak with.",
+      subtitle: "A first guess is enough.",
+      microcopy: "You can sort details out with any clinician you talk to later.",
     },
     {
       id: "modality_preference",
       field: "modality_preference",
       title: "Where would you prefer sessions to happen?",
-      subtitle: "You can always change your mind.",
-      microcopy: "Some people need home; some need a separate space. Both are valid.",
+      subtitle: "You can change this later.",
+      microcopy: "Some people prefer home; some prefer an office. Either can be the right fit.",
     },
     {
       id: "therapist_preferences",
       field: "therapist_preferences",
       title: "Anything you already know you want in a therapist?",
-      subtitle: "Optional — identity, language, style, faith, LGBTQ+ affirming, etc.",
-      microcopy: "Leave blank if you are still figuring it out. That is normal.",
+      subtitle: "Optional — language, style, identity, faith, LGBTQ+ affirming care, and so on.",
+      microcopy: "Blank is fine if you are still discovering what you need.",
     },
     {
       id: "therapy_goals",
       field: "therapy_goals",
       title: "If therapy went really well, what would feel different in your life?",
-      subtitle: "Future-oriented, not a commitment — just a compass.",
-      microcopy: "Even one sentence is a gift to your future self.",
+      subtitle: "Imagining the future — not signing a contract.",
+      microcopy: "Even one sentence can be a useful anchor when you talk with someone.",
     }
   );
 

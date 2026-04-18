@@ -23,9 +23,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Clarity — therapy readiness & prep",
+  title: "Clarity — gentle therapy prep",
   description:
-    "A calm space to reflect, prepare for therapy, and explore next steps. Not a diagnosis or crisis service.",
+    "A quiet place to notice how you are doing, put words to it, and bring something useful to a first session. Not therapy, not a crisis line.",
 };
 
 export default function RootLayout({

@@ -1,5 +1,6 @@
 import type { ClaritySession } from "@/types/clarity";
 import { CLARITY_STORAGE_KEY } from "./constants";
+import { buildNextSteps } from "./next-steps-templates";
 
 function newId(): string {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -14,9 +15,12 @@ export function createDefaultSession(): ClaritySession {
     id: newId(),
     updatedAt: now,
     intake: {},
+    intakeInferredStepIds: [],
+    intakeConfirmedStepIds: [],
     lifestyle: null,
     brainDump: null,
     summary: null,
+    readinessAnalysis: null,
     nextSteps: null,
     prepSheet: null,
     matchPreferences: null,
@@ -30,7 +34,19 @@ export function loadSession(): ClaritySession | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as ClaritySession;
     if (!parsed || typeof parsed !== "object" || !parsed.id) return null;
-    return parsed;
+    const base: ClaritySession = {
+      ...parsed,
+      readinessAnalysis: parsed.readinessAnalysis ?? null,
+      intakeInferredStepIds: parsed.intakeInferredStepIds ?? [],
+      intakeConfirmedStepIds: parsed.intakeConfirmedStepIds ?? [],
+    };
+    if (
+      base.summary &&
+      (!base.nextSteps || base.nextSteps.length === 0)
+    ) {
+      return { ...base, nextSteps: buildNextSteps(base.summary.tags) };
+    }
+    return base;
   } catch {
     return null;
   }

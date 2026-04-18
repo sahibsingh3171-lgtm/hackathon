@@ -22,17 +22,17 @@ export default function NextStepsPage() {
   return (
     <StepShell
       path="/next-steps"
-      title="Low-friction next steps"
-      subtitle="Small actions you can try today — plus signals for when professional support helps."
-      onBack={() => router.push("/summary")}
-      onNext={() => router.push("/prep-sheet")}
+      title="Before you close the tab"
+      subtitle="A few small moves if you want them — plus reminders of when talking to a professional might help."
+      onBack={() => router.push("/prep-sheet")}
+      onNext={() => router.push("/")}
       nextDisabled={!session.nextSteps?.length}
-      nextLabel="Build prep sheet"
+      nextLabel="Return home"
     >
       {session.nextSteps?.length ? (
         <NextStepsList items={session.nextSteps} />
       ) : (
-        <p className="text-sm text-muted-foreground">Loading suggestions…</p>
+        <p className="text-sm text-muted-foreground">Gathering ideas…</p>
       )}
     </StepShell>
   );

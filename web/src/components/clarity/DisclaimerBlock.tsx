@@ -2,16 +2,16 @@ import { cn } from "@/lib/utils";
 
 const COPY = {
   hero: {
-    title: "Clarity is not a diagnosis",
-    body: "Clarity helps you reflect and prepare for a conversation with a licensed professional. It does not provide medical advice, therapy, or crisis services.",
+    title: "What Clarity is — and is not",
+    body: "Clarity is here to help you think things through and get ready to talk with someone trained to help. It is not medical advice, therapy, or a crisis service.",
   },
   inline: {
-    title: "Reminder",
-    body: "This is educational prep—not a substitute for care from a qualified clinician.",
+    title: "A gentle boundary",
+    body: "Use this alongside care from a licensed clinician — not instead of it.",
   },
   footer: {
-    title: "Limits of this tool",
-    body: "If you are in immediate danger, call your local emergency number. In the U.S., call or text 988 for confidential support.",
+    title: "If you need help right now",
+    body: "If you might be in danger, call your local emergency number. In the U.S., you can call or text 988 for free, confidential support, any time.",
   },
 } as const;
 
@@ -28,9 +28,9 @@ export function DisclaimerBlock({
   return (
     <aside
       className={cn(
-        "rounded-3xl border border-border bg-card px-5 py-4 text-sm leading-relaxed text-muted-foreground shadow-clarity-soft",
+        "rounded-3xl border border-border/50 bg-card px-6 py-5 text-sm leading-relaxed text-muted-foreground shadow-sm ring-1 ring-foreground/[0.02]",
         variant === "hero" &&
-          "border-primary/20 bg-accent/60 text-muted-foreground shadow-none",
+          "border-primary/18 bg-accent/55 text-muted-foreground shadow-none ring-primary/5",
         className
       )}
     >

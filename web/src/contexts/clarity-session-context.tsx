@@ -11,16 +11,15 @@ import {
   type ReactNode,
 } from "react";
 
+import { crisisSupportPanelState } from "@/lib/clarity/crisis-support-panel-state";
 import { evaluateSessionCrisisLevel } from "@/lib/clarity/crisis-heuristics";
-import {
-  clearSession,
-  createDefaultSession,
-  loadSession,
-  saveSession,
-} from "@/lib/clarity/session";
+import { claritySessionPersistence } from "@/lib/clarity/persisted-session";
+import { createDefaultSession } from "@/lib/clarity/session";
 import type { ClaritySession, CrisisLevel } from "@/types/clarity";
+import type { CrisisSupportPanelVariant } from "@/lib/clarity/crisis-support-panel-state";
 
 const CRISIS_DISMISS_PREFIX = "clarity_crisis_dismissed_";
+const CRISIS_PANEL_DISMISS_PREFIX = "clarity_crisis_panel_dismissed_";
 
 type Update = Partial<ClaritySession> | ((prev: ClaritySession) => ClaritySession);
 
@@ -32,6 +31,10 @@ type ClarityContextValue = {
   crisisLevel: CrisisLevel;
   crisisBannerVisible: boolean;
   dismissCrisisBanner: () => void;
+  /** In-page results panel variant, or null when dismissed or no concern. */
+  crisisSupportPanelVariant: CrisisSupportPanelVariant | null;
+  dismissCrisisPanel: () => void;
+  resetCrisisPanelDismiss: () => void;
 };
 
 const ClarityContext = createContext<ClarityContextValue | null>(null);
@@ -51,22 +54,27 @@ export function ClaritySessionProvider({ children }: { children: ReactNode }) {
   const [session, setSessionState] = useState<ClaritySession>(createDefaultSession);
   const [hydrated, setHydrated] = useState(false);
   const [crisisDismissed, setCrisisDismissed] = useState(false);
+  const [crisisPanelDismissed, setCrisisPanelDismissed] = useState(false);
 
   useEffect(() => {
-    const saved = loadSession();
+    const saved = claritySessionPersistence.load();
     const dismissed =
       typeof window !== "undefined" &&
       sessionStorage.getItem(`${CRISIS_DISMISS_PREFIX}${saved?.id ?? "none"}`) === "1";
+    const panelDismissed =
+      typeof window !== "undefined" &&
+      sessionStorage.getItem(`${CRISIS_PANEL_DISMISS_PREFIX}${saved?.id ?? "none"}`) === "1";
     startTransition(() => {
       if (saved) setSessionState(saved);
       setCrisisDismissed(dismissed);
+      setCrisisPanelDismissed(panelDismissed);
       setHydrated(true);
     });
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
-    saveSession(session);
+    claritySessionPersistence.save(session);
   }, [session, hydrated]);
 
   const crisisLevel = useMemo((): CrisisLevel => {
@@ -80,10 +88,32 @@ export function ClaritySessionProvider({ children }: { children: ReactNode }) {
   const crisisBannerVisible =
     crisisLevel !== "none" && !crisisDismissed;
 
+  const crisisSupportPanelVariant = useMemo((): CrisisSupportPanelVariant | null => {
+    if (crisisPanelDismissed) return null;
+    return crisisSupportPanelState({
+      crisisLevel,
+      crisisFlag: session.readinessAnalysis?.crisisFlag,
+    });
+  }, [crisisLevel, crisisPanelDismissed, session.readinessAnalysis?.crisisFlag]);
+
   const dismissCrisisBanner = useCallback(() => {
     setCrisisDismissed(true);
     if (typeof window !== "undefined") {
       sessionStorage.setItem(`${CRISIS_DISMISS_PREFIX}${session.id}`, "1");
+    }
+  }, [session.id]);
+
+  const dismissCrisisPanel = useCallback(() => {
+    setCrisisPanelDismissed(true);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(`${CRISIS_PANEL_DISMISS_PREFIX}${session.id}`, "1");
+    }
+  }, [session.id]);
+
+  const resetCrisisPanelDismiss = useCallback(() => {
+    setCrisisPanelDismissed(false);
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem(`${CRISIS_PANEL_DISMISS_PREFIX}${session.id}`);
     }
   }, [session.id]);
 
@@ -95,10 +125,11 @@ export function ClaritySessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resetFlow = useCallback(() => {
-    clearSession();
+    claritySessionPersistence.clear();
     const fresh = createDefaultSession();
     setSessionState(fresh);
     setCrisisDismissed(false);
+    setCrisisPanelDismissed(false);
   }, []);
 
   const value = useMemo(
@@ -110,6 +141,9 @@ export function ClaritySessionProvider({ children }: { children: ReactNode }) {
       crisisLevel,
       crisisBannerVisible,
       dismissCrisisBanner,
+      crisisSupportPanelVariant,
+      dismissCrisisPanel,
+      resetCrisisPanelDismiss,
     }),
     [
       session,
@@ -119,6 +153,9 @@ export function ClaritySessionProvider({ children }: { children: ReactNode }) {
       crisisLevel,
       crisisBannerVisible,
       dismissCrisisBanner,
+      crisisSupportPanelVariant,
+      dismissCrisisPanel,
+      resetCrisisPanelDismiss,
     ]
   );
 

@@ -2,6 +2,9 @@
  * Clarity domain helpers: flow constants, session persistence, intake copy,
  * crisis heuristics, prep sheet, next-step templates. AI + matching live under
  * `lib/ai` and `lib/therapist`; mock rows under `data/`.
+ *
+ * **Session state:** `contexts/clarity-session-context` + `claritySessionPersistence`
+ * (sessionStorage). Replace persistence with API calls when you add a backend.
  */
 
 export { FLOW_STEPS, stepIndexForPath } from "./constants";
@@ -25,6 +28,11 @@ export {
   THERAPY_HISTORY_OPTIONS,
 } from "./intake-flow-config";
 export {
+  computeDueIntakeStepIndices,
+  humanLabelsForInferredSteps,
+  nextDueCursorAfterAdvance,
+} from "./intake-due-steps";
+export {
   buildLifestyleFromIntake,
   buildMatchPreferencesFromIntake,
   buildStructuredIntakeForAnalysis,
@@ -39,8 +47,25 @@ export { INTAKE_QUESTIONS, intakeCompletionCount, intakeRequiredComplete, isLike
 export { buildNextSteps } from "./next-steps-templates";
 export { buildPrepSheet, intakeHighlightLines, lifestyleHighlightLines } from "./prep-sheet";
 export {
+  claritySessionPersistence,
+  type ClaritySessionPersistence,
+} from "./persisted-session";
+export {
   clearSession,
   createDefaultSession,
   loadSession,
   saveSession,
 } from "./session";
+export {
+  applyDemoSession,
+  DEMO_BRAIN_DUMP,
+  DEMO_BRAIN_DUMP_TEXT,
+  DEMO_INTAKE,
+  DEMO_LIFESTYLE,
+  DEMO_MATCH_PROFILE_IDS_ORDERED,
+  DEMO_PERSONA,
+  DEMO_READINESS,
+  DEMO_SCREEN_ORDER,
+  DEMO_SUMMARY,
+  getDemoSession,
+} from "./demo-flow";

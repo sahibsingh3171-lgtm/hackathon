@@ -1,4 +1,4 @@
-import type { IntakeAnswers, LifestyleSnapshot, Likert, MatchPreferences } from "@/types/clarity";
+import type { BrainDump, IntakeAnswers, LifestyleSnapshot, Likert, MatchPreferences } from "@/types/clarity";
 
 import {
   BUDGET_RANGE_OPTIONS,
@@ -155,7 +155,7 @@ export function buildMatchPreferencesFromIntake(intake: IntakeAnswers): MatchPre
 }
 
 /** Structured payload for AI / logging — mirrors session.intake but typed for models. */
-export function buildStructuredIntakeForAnalysis(intake: IntakeAnswers) {
+export function buildStructuredIntakeForAnalysis(intake: IntakeAnswers, brainDump?: BrainDump | null) {
   const phq9Scores: number[] = [];
   for (let i = 1; i <= 9; i += 1) {
     const v = intake[phq9Key(i)];
@@ -193,5 +193,18 @@ export function buildStructuredIntakeForAnalysis(intake: IntakeAnswers) {
     therapyGoals: typeof intake.therapy_goals === "string" ? intake.therapy_goals.trim() : "",
     matchPreferencesPreview: buildMatchPreferencesFromIntake(intake),
     lifestylePreview: buildLifestyleFromIntake(intake),
+    brainDumpCompanion: brainDump
+      ? {
+          themes:
+            brainDump.themes?.length && brainDump.themes.length > 0
+              ? brainDump.themes
+              : Array.isArray(intake.brain_dump_tags)
+                ? (intake.brain_dump_tags as string[])
+                : [],
+          textExcerpt: brainDump.text.trim().slice(0, 800),
+          voiceStatus: brainDump.voice?.status ?? "skipped",
+          voiceDurationSec: brainDump.voice?.durationSec,
+        }
+      : null,
   };
 }

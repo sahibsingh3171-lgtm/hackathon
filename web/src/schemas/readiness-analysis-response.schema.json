@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://clarity.local/schemas/readiness-analysis-response.json",
+  "title": "ReadinessAnalysisResponse",
+  "description": "Structured output contract for the Clarity readiness analysis model (educational, not diagnostic).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "therapyConsiderationLevel",
+    "conciseSummary",
+    "mainConcerns",
+    "emotionalPatterns",
+    "potentialSupportAreas",
+    "lowFrictionInterventions",
+    "therapyPrepSummary",
+    "suggestedTherapistTraits",
+    "crisisFlag",
+    "crisisReason",
+    "journalSummary",
+    "recommendedQuestionsForTherapy",
+    "confidenceNotes",
+    "limitations"
+  ],
+  "properties": {
+    "therapyConsiderationLevel": {
+      "type": "string",
+      "enum": ["monitor", "consider_support", "strongly_consider_support"]
+    },
+    "conciseSummary": { "type": "string", "minLength": 1 },
+    "mainConcerns": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "emotionalPatterns": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "potentialSupportAreas": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "lowFrictionInterventions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "therapyPrepSummary": { "type": "string", "minLength": 1 },
+    "suggestedTherapistTraits": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "crisisFlag": { "type": "boolean" },
+    "crisisReason": { "type": ["string", "null"] },
+    "journalSummary": { "type": "string", "minLength": 1 },
+    "recommendedQuestionsForTherapy": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "confidenceNotes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "limitations": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    }
+  }
+}

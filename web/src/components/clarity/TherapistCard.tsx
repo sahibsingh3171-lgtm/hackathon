@@ -8,12 +8,21 @@ export function TherapistCard({ therapist }: { therapist: Therapist }) {
       <CardHeader className="pb-2">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <CardTitle className="font-heading text-lg text-foreground">{therapist.name}</CardTitle>
-          <span className="text-sm font-medium text-primary">
-            ★ {therapist.reviewScore.toFixed(1)}{" "}
-            <span className="text-muted-foreground">({therapist.reviewCount})</span>
-          </span>
+          <div className="flex flex-col items-end gap-1 text-right">
+            {therapist.matchScore != null ? (
+              <span className="rounded-full bg-primary/12 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                Match {therapist.matchScore}
+              </span>
+            ) : null}
+            <span className="text-sm font-medium text-primary">
+              ★ {therapist.reviewScore.toFixed(1)}{" "}
+              <span className="text-muted-foreground">({therapist.reviewCount})</span>
+            </span>
+          </div>
         </div>
-        {therapist.matchReason ? (
+        {therapist.matchExplanation ? (
+          <p className="text-sm leading-relaxed text-foreground">{therapist.matchExplanation}</p>
+        ) : therapist.matchReason ? (
           <p className="text-sm text-primary/90">{therapist.matchReason}</p>
         ) : null}
       </CardHeader>

@@ -1,22 +1,29 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { usePathname } from "next/navigation";
 
 import { CrisisBanner } from "@/components/clarity/CrisisBanner";
 import { SiteHeader } from "@/components/clarity/SiteHeader";
+import { useClaritySession } from "@/contexts/clarity-session-context";
 
 /** Global chrome: canvas background, crisis strip, header, main, footer. */
 export function AppShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const { crisisSupportPanelVariant } = useClaritySession();
+  const hideCrisisBannerOnSummary =
+    pathname === "/summary" && crisisSupportPanelVariant !== null;
+
   return (
     <div className="clarity-canvas flex min-h-full flex-col">
-      <CrisisBanner />
+      {!hideCrisisBannerOnSummary ? <CrisisBanner /> : null}
       <SiteHeader />
       <main className="relative z-10 flex flex-1 flex-col">{children}</main>
       <footer
         id="crisis-support"
-        className="no-print relative z-10 scroll-mt-24 border-t border-border bg-card/60 px-clarity-section-x py-clarity-loose text-center text-xs text-muted-foreground backdrop-blur-sm"
+        className="no-print relative z-10 scroll-mt-24 border-t border-border/50 bg-card/50 px-4 py-10 text-center text-xs leading-relaxed text-muted-foreground backdrop-blur-sm sm:px-8"
       >
-        <span className="block text-muted-foreground">
+        <span className="mx-auto block max-w-md text-muted-foreground">
           U.S. · Call or text{" "}
           <a
             className="font-medium text-primary underline decoration-primary/30 underline-offset-2"
@@ -34,9 +41,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             988lifeline.org
           </a>
         </span>
-        <span className="mx-auto mt-2 block max-w-xl leading-relaxed">
-          Clarity is a demo readiness tool — not a crisis service, diagnosis, or replacement for
-          licensed care.
+        <span className="mx-auto mt-3 block max-w-lg text-[0.8125rem] leading-relaxed sm:max-w-xl">
+          Clarity is a small prep companion for this demo. It does not replace a crisis line, a
+          diagnosis, or ongoing care with a licensed professional.
         </span>
       </footer>
     </div>

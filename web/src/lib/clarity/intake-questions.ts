@@ -16,11 +16,11 @@ export interface IntakeQuestion {
   section?: string;
 }
 
-/** Inspired by common clinical intake themes — not a licensed instrument. */
+/** Inspired by common intake themes — not a licensed instrument. */
 export const INTAKE_QUESTIONS: IntakeQuestion[] = [
   {
     id: "mood_low",
-    section: "How you’ve been feeling",
+    section: "How you have been feeling",
     type: "likert",
     title: "Over the past two weeks, how often have you felt down, low, or hopeless?",
     likertLow: "Not at all",
@@ -89,7 +89,7 @@ export const INTAKE_QUESTIONS: IntakeQuestion[] = [
     section: "Anything else",
     type: "textarea",
     title: "In a sentence or two, what feels heaviest right now? (Optional)",
-    description: "This helps Clarity reflect themes — not for diagnosis.",
+    description: "Helps Clarity echo themes back to you — not for diagnosis.",
   },
 ];
 

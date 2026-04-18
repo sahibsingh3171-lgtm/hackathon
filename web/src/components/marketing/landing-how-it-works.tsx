@@ -1,18 +1,18 @@
 const STEPS = [
   {
     step: "01",
-    title: "Check in honestly",
-    body: "A short guided intake captures how you are doing — mood, stress, sleep, and what matters most — without rushing you.",
+    title: "Put it into words",
+    body: "Start with an open space for your words — messy is fine. Prefer structure first? The same thoughtful check-in is there when you choose it.",
   },
   {
     step: "02",
-    title: "Say it your way",
-    body: "Use voice or text to brain dump what is hard to say out loud. Nothing has to sound polished.",
+    title: "Check in at your pace",
+    body: "We only ask what is still missing after your words — mood, stress, sleep, and practical details, one screen at a time.",
   },
   {
     step: "03",
-    title: "Leave with direction",
-    body: "A calm prep summary and therapist-style matches help you budget time, cost, and fit before you book.",
+    title: "Carry something forward",
+    body: "A readable summary, optional match ideas, and a prep sheet you can print or bring to a first conversation.",
   },
 ] as const;
 
@@ -21,21 +21,22 @@ export function LandingHowItWorks() {
     <section
       id="how-it-works"
       aria-labelledby="how-heading"
-      className="border-b border-border/60 bg-card/30 py-16 sm:py-20 lg:py-24"
+      className="border-b border-border/50 bg-card/25 py-20 sm:py-24 lg:py-28"
     >
-      <div className="mx-auto max-w-6xl px-clarity-section-x sm:px-10">
+      <div className="clarity-container">
         <div className="max-w-2xl">
           <h2 id="how-heading" className="font-heading text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
             How it works
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
-            Three gentle steps. Stop anywhere — your reflections stay yours.
+            Three steps you can move through slowly. Stop whenever you need to — nothing here is
+            meant to rush you.
           </p>
         </div>
 
-        <ol className="mt-14 grid gap-8 lg:grid-cols-3 lg:gap-10">
+        <ol className="mt-16 grid gap-6 sm:gap-8 lg:grid-cols-3 lg:gap-8">
           {STEPS.map((item) => (
-            <li key={item.step} className="clarity-surface flex flex-col rounded-3xl p-8 sm:p-9">
+            <li key={item.step} className="clarity-surface flex flex-col rounded-3xl p-8 sm:p-10">
               <span className="font-mono text-xs font-medium uppercase tracking-[0.2em] text-primary">
                 {item.step}
               </span>

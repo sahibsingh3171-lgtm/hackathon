@@ -1,23 +1,26 @@
 export function LandingWhyMatters() {
   return (
-    <section aria-labelledby="why-heading" className="py-16 sm:py-20 lg:py-24">
-      <div className="mx-auto max-w-6xl px-clarity-section-x sm:px-10">
-        <div className="grid gap-10 lg:grid-cols-12 lg:gap-16 lg:items-start">
+    <section aria-labelledby="why-heading" className="py-20 sm:py-24 lg:py-28">
+      <div className="clarity-container">
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16 lg:items-start">
           <div className="lg:col-span-5">
-            <h2 id="why-heading" className="font-heading text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Why therapy feels hard before it starts
+            <h2
+              id="why-heading"
+              className="max-w-[16ch] font-heading text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-4xl sm:leading-tight"
+            >
+              The gap before the first conversation
             </h2>
           </div>
           <div className="lg:col-span-7">
-            <div className="rounded-3xl border-l-[3px] border-primary/35 bg-accent/50 px-8 py-9 sm:px-10 sm:py-10">
-              <blockquote className="font-heading text-xl font-medium leading-snug text-foreground sm:text-2xl">
-                Most people do not need convincing that support helps. They need a bridge between
-                “I should probably…” and a first conversation that feels survivable.
+            <div className="rounded-3xl border border-border/45 border-l-[3px] border-l-primary/40 bg-accent/45 px-8 py-10 shadow-sm sm:px-11 sm:py-11">
+              <blockquote className="font-heading text-xl font-medium leading-snug text-foreground sm:text-2xl sm:leading-snug">
+                A lot of us already know talking to someone might help. What is harder is crossing
+                from “maybe later” to a first session that feels possible.
               </blockquote>
               <p className="mt-8 text-base leading-relaxed text-muted-foreground">
-                Clarity exists in that gap: not to replace a therapist, but to help you name what
-                you are carrying, decide if timing feels right, and walk in with language you trust
-                — including budget and modality preferences you actually care about.
+                Clarity sits in that in-between: a place to notice what you are holding, see if
+                support feels timely, and gather a few phrases and practical details — cost, format,
+                what you hope for — so the door feels a little easier to open.
               </p>
             </div>
           </div>

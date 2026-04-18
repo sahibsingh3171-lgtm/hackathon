@@ -22,55 +22,54 @@ export function LandingHero() {
         aria-hidden
       />
 
-      <div className="relative mx-auto grid max-w-6xl gap-12 px-clarity-section-x py-16 sm:px-10 sm:py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-center lg:gap-16 lg:py-24">
+      <div className="clarity-container relative grid gap-12 py-20 sm:gap-14 sm:py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.02fr)] lg:items-center lg:gap-20 lg:py-28">
         <div className="flex min-w-0 flex-col">
-          <div className="mb-8 max-w-xl">
+          <div className="mb-10 max-w-xl sm:mb-12">
             <DisclaimerBlock variant="hero" />
           </div>
 
-          <p className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground shadow-clarity-soft">
-            Therapy readiness
+          <p className="inline-flex w-fit items-center gap-2 rounded-full border border-border/60 bg-card/90 px-4 py-2.5 text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground shadow-sm backdrop-blur-sm">
+            Before the first session
           </p>
 
           <h1
             id="hero-heading"
-            className="mt-8 max-w-[18ch] text-balance font-heading text-4xl font-semibold leading-[1.08] tracking-tight text-foreground sm:text-5xl lg:text-[3.25rem]"
+            className="mt-8 max-w-[20ch] text-balance font-heading text-4xl font-semibold leading-[1.06] tracking-tight text-foreground sm:mt-10 sm:text-5xl sm:leading-[1.05] lg:max-w-[22ch] lg:text-[3.2rem]"
           >
-            Reflect, prepare, and find care that fits.
+            A steadier way to think about therapy.
           </h1>
 
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Clarity helps you understand whether therapy might help right now, capture what you are
-            experiencing in your own words, and walk into a first session with clarity — not
-            pressure.
+          <p className="mt-7 max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground sm:mt-8">
+            Notice how you have been doing, say what is hard in your own words, and leave with a few
+            anchors — questions to ask, language that fits you, and a sense of what might help next.
           </p>
 
-          <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
+          <div className="mt-11 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
             <Link
-              href="/intake"
+              href="/brain-dump"
               className={cn(
                 buttonVariants(),
                 "inline-flex h-auto min-h-11 items-center justify-center gap-2 rounded-2xl bg-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground shadow-clarity-soft hover:bg-primary/90"
               )}
             >
-              Begin your check-in
+              Start the check-in
               <ArrowRight className="size-4 shrink-0" aria-hidden />
             </Link>
             <Link
               href="#how-it-works"
               className="text-center text-sm font-medium text-muted-foreground underline decoration-border underline-offset-[0.35rem] transition hover:text-foreground hover:decoration-primary/40 sm:text-left"
             >
-              See how it works
+              How it works
             </Link>
           </div>
 
           <p className="mt-10 inline-flex max-w-md flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <BadgeCheck className="size-4 shrink-0 text-primary" aria-hidden />
-            <span className="text-foreground/90">Private in your browser</span>
+            <span className="text-foreground/90">Stays on this device for the demo</span>
             <span className="hidden text-border sm:inline" aria-hidden>
               ·
             </span>
-            <span>No account required for the demo</span>
+            <span>No account needed to try it</span>
           </p>
         </div>
 
