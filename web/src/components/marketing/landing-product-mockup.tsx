@@ -4,13 +4,16 @@ import type { CSSProperties } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Mic, Sparkles } from "lucide-react";
 
-function easeOutExpo(t: number): number {
-  return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t);
-}
+/** Delay between each mockup card starting its pop (ms). */
+const CARD_STAGGER_MS = 500;
+/** Duration of each card’s own pop-in (ms). */
+const CARD_POP_MS = 480;
+/** Stop RAF after all cards have settled (ms). */
+const POP_SEQUENCE_TOTAL_MS = CARD_STAGGER_MS * 2 + CARD_POP_MS + 80;
 
 function buildCardStyle(
   index: number,
-  intro: number,
+  elapsedMs: number,
   scrollP: number,
   reducedMotion: boolean
 ): CSSProperties {
@@ -18,8 +21,9 @@ function buildCardStyle(
     return { opacity: 1, transform: "none", filter: "none" };
   }
 
-  const stagger = Math.max(0, Math.min(1, intro * 1.28 - index * 0.15));
-  const easedStagger = easeOutExpo(stagger);
+  const start = index * CARD_STAGGER_MS;
+  const raw = Math.max(0, Math.min(1, (elapsedMs - start) / CARD_POP_MS));
+  const easedStagger = 1 - Math.pow(1 - raw, 2.85);
 
   /* Restrained parallax — premium depth without aggressive tilt */
   const rise = (1 - easedStagger) * (72 + index * 22);
@@ -50,12 +54,12 @@ function buildCardStyle(
       `0 ${14 + scrollP * 28}px ${44 + scrollP * 32}px rgb(111 143 120 / ${sageLift})`,
       "inset 0 1px 0 rgb(255 255 255 / 0.78)",
     ].join(", ")}`,
-    willChange: intro < 1 || scrollP > 0.01 ? "transform, opacity, filter" : "auto",
+    willChange: raw < 1 || scrollP > 0.01 ? "transform, opacity, filter" : "auto",
   };
 }
 
 /**
- * Scroll-sculpted 3D product stack: blur → sharp intro, staggered depth, parallax on scroll.
+ * Scroll-sculpted 3D product stack: cards pop in one after another (500ms apart), parallax on scroll.
  */
 function readReduceMotionPreference(): boolean {
   if (typeof window === "undefined") return false;
@@ -65,10 +69,11 @@ function readReduceMotionPreference(): boolean {
 export function LandingProductMockup() {
   const rootRef = useRef<HTMLDivElement>(null);
   const ticking = useRef(false);
-  const introRaf = useRef<number | null>(null);
+  const popRaf = useRef<number | null>(null);
 
   const [revealed, setRevealed] = useState(false);
-  const [intro, setIntro] = useState(0);
+  /** Elapsed ms since pop sequence started (0 → POP_SEQUENCE_TOTAL_MS). */
+  const [popElapsedMs, setPopElapsedMs] = useState(0);
   const [scrollP, setScrollP] = useState(0);
   const [reduceMotion, setReduceMotion] = useState(readReduceMotionPreference);
 
@@ -93,22 +98,19 @@ export function LandingProductMockup() {
   }, []);
 
   useEffect(() => {
-    if (reduceMotion || !revealed) return;
+    if (!revealed || reduceMotion) return;
 
     const t0 = performance.now();
-    const duration = 1180;
-
     const frame = (now: number) => {
-      const u = Math.min(1, (now - t0) / duration);
-      const eased = 1 - Math.pow(1 - u, 2.65);
-      setIntro(eased);
-      if (u < 1) {
-        introRaf.current = requestAnimationFrame(frame);
+      const elapsed = Math.min(POP_SEQUENCE_TOTAL_MS, now - t0);
+      setPopElapsedMs(elapsed);
+      if (elapsed < POP_SEQUENCE_TOTAL_MS) {
+        popRaf.current = requestAnimationFrame(frame);
       }
     };
-    introRaf.current = requestAnimationFrame(frame);
+    popRaf.current = requestAnimationFrame(frame);
     return () => {
-      if (introRaf.current != null) cancelAnimationFrame(introRaf.current);
+      if (popRaf.current != null) cancelAnimationFrame(popRaf.current);
     };
   }, [revealed, reduceMotion]);
 
@@ -149,10 +151,10 @@ export function LandingProductMockup() {
     };
   }, [measureScroll, reduceMotion]);
 
-  const motionIntro = reduceMotion ? 1 : revealed ? intro : 0;
+  const motionProgress = reduceMotion ? 1 : revealed ? Math.min(1, popElapsedMs / POP_SEQUENCE_TOTAL_MS) : 0;
 
   const orbScale = 1 + scrollP * 0.09;
-  const orbOpacity = 0.26 + scrollP * 0.18 + motionIntro * 0.07;
+  const orbOpacity = 0.26 + scrollP * 0.18 + motionProgress * 0.07;
 
   return (
     <div ref={rootRef} className="relative mx-auto w-full max-w-lg lg:max-w-none" aria-hidden>
@@ -185,7 +187,7 @@ export function LandingProductMockup() {
             {/* Back — Intake */}
             <div
               className="clarity-mockup-card clarity-surface relative z-0 ml-auto w-[88%] rounded-[1.375rem] border border-border/70 bg-card/96 p-5 backdrop-blur-[2px] sm:rounded-3xl sm:p-6"
-              style={buildCardStyle(0, motionIntro, scrollP, reduceMotion)}
+              style={buildCardStyle(0, popElapsedMs, scrollP, reduceMotion)}
             >
               <p className="text-[0.625rem] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                 Intake
@@ -206,7 +208,7 @@ export function LandingProductMockup() {
             {/* Middle — Your words */}
             <div
               className="clarity-mockup-card clarity-surface relative z-10 -mt-7 w-[92%] rounded-[1.375rem] border border-border/70 bg-card/96 p-5 backdrop-blur-[2px] sm:-mt-9 sm:rounded-3xl sm:p-6"
-              style={buildCardStyle(1, motionIntro, scrollP, reduceMotion)}
+              style={buildCardStyle(1, popElapsedMs, scrollP, reduceMotion)}
             >
               <div className="flex items-center gap-2 text-[0.625rem] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                 <Mic className="size-3.5 text-primary/90" strokeWidth={1.75} />
@@ -221,7 +223,7 @@ export function LandingProductMockup() {
             {/* Front — Prep sheet */}
             <div
               className="clarity-mockup-card clarity-surface relative z-20 -mt-5 ml-1.5 w-full max-w-md rounded-[1.375rem] border border-border/70 bg-card/96 p-5 backdrop-blur-[2px] sm:-mt-7 sm:ml-3 sm:rounded-3xl sm:p-7"
-              style={buildCardStyle(2, motionIntro, scrollP, reduceMotion)}
+              style={buildCardStyle(2, popElapsedMs, scrollP, reduceMotion)}
             >
               <div className="flex items-center justify-between gap-3">
                 <p className="text-[0.625rem] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
