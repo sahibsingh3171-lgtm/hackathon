@@ -24,6 +24,7 @@ export function createDefaultSession(): ClaritySession {
     nextSteps: null,
     prepSheet: null,
     matchPreferences: null,
+    practiceConversation: null,
   };
 }
 

@@ -2,14 +2,18 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { BookOpenCheck, MessagesSquare } from "lucide-react";
 
+import { PracticeChat } from "@/components/clarity/PracticeChat";
 import { PracticeSessionPanel } from "@/components/clarity/PracticeSessionPanel";
 import { StepShell } from "@/components/clarity/StepShell";
 import { useClaritySession } from "@/contexts/clarity-session-context";
 import { buildPracticeSession } from "@/lib/clarity/practice-session";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+type Mode = "chat" | "examples";
 
 const browseMatchesAside = (
   <Link
@@ -26,6 +30,7 @@ const browseMatchesAside = (
 export default function PracticeSessionPage() {
   const router = useRouter();
   const { session } = useClaritySession();
+  const [mode, setMode] = useState<Mode>("chat");
 
   const content = useMemo(() => buildPracticeSession(session), [session]);
 
@@ -52,8 +57,30 @@ export default function PracticeSessionPage() {
         </Link>{" "}
         anytime without losing this page.
       </p>
+
       {content ? (
-        <PracticeSessionPanel content={content} />
+        <>
+          <ModeToggle value={mode} onChange={setMode} />
+          <div className="mt-2">
+            {mode === "chat" ? (
+              <PracticeChat
+                afterEndAside={
+                  <Link
+                    href="/prep-sheet"
+                    className={cn(
+                      buttonVariants({ variant: "ghost" }),
+                      "rounded-2xl px-4 text-sm font-medium text-foreground/80"
+                    )}
+                  >
+                    Continue to prep sheet
+                  </Link>
+                }
+              />
+            ) : (
+              <PracticeSessionPanel content={content} />
+            )}
+          </div>
+        </>
       ) : (
         <div className="space-y-6 rounded-[1.75rem] border border-border/60 bg-muted/15 px-8 py-12 text-center">
           <p className="font-heading text-lg font-semibold text-foreground">Nothing to rehearse yet</p>
@@ -72,5 +99,44 @@ export default function PracticeSessionPage() {
         </div>
       )}
     </StepShell>
+  );
+}
+
+function ModeToggle({ value, onChange }: { value: Mode; onChange: (m: Mode) => void }) {
+  return (
+    <div
+      role="tablist"
+      aria-label="Practice mode"
+      className="inline-flex rounded-full border border-border/60 bg-muted/[0.18] p-1 text-sm"
+    >
+      <button
+        role="tab"
+        aria-selected={value === "chat"}
+        onClick={() => onChange("chat")}
+        className={cn(
+          "inline-flex items-center gap-2 rounded-full px-4 py-2 font-medium transition-colors",
+          value === "chat"
+            ? "bg-card text-foreground shadow-[0_1px_2px_rgb(15_23_42_/0.06)]"
+            : "text-muted-foreground hover:text-foreground"
+        )}
+      >
+        <MessagesSquare className="size-4" aria-hidden />
+        Interactive rehearsal
+      </button>
+      <button
+        role="tab"
+        aria-selected={value === "examples"}
+        onClick={() => onChange("examples")}
+        className={cn(
+          "inline-flex items-center gap-2 rounded-full px-4 py-2 font-medium transition-colors",
+          value === "examples"
+            ? "bg-card text-foreground shadow-[0_1px_2px_rgb(15_23_42_/0.06)]"
+            : "text-muted-foreground hover:text-foreground"
+        )}
+      >
+        <BookOpenCheck className="size-4" aria-hidden />
+        Guided examples
+      </button>
+    </div>
   );
 }

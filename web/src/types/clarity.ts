@@ -137,6 +137,96 @@ export interface PracticeSessionContent {
   prompts: PracticeSessionPromptBlock[];
 }
 
+// —— Interactive practice (bounded, rehearsal-only) ————————————————————————————
+
+/** Who spoke. `system` = short meta notes (crisis interstitials, resets) — never treated as therapy advice. */
+export type PracticeTurnRole = "assistant" | "user" | "system";
+
+export interface PracticeTurnMessage {
+  id: string;
+  role: PracticeTurnRole;
+  text: string;
+  /** ISO timestamp — handy for printed prep sheet later. */
+  createdAt: string;
+  /** Voice vs typed — UI hint only. */
+  input?: "typed" | "voice";
+}
+
+/** Curtain call summary generated once the rehearsal wraps (plain-language, non-clinical). */
+export interface PracticeSessionSummary {
+  /** 1–2 short sentences of what the user communicated well. */
+  communicatedClearly: string;
+  /** 3–5 short bullets of themes they raised. */
+  themes: string[];
+  /** 2–4 short prompts to bring to a real therapist. */
+  bringToTherapist: string[];
+  /** Gentle one-liner closing the rehearsal. */
+  closingLine: string;
+  generatedAt: string;
+}
+
+export type PracticeSessionPhase = "intro" | "in_progress" | "wrapping" | "complete" | "crisis_halt";
+
+export interface PracticeConversationState {
+  /** Deterministic id for the rehearsal (not a DB row — only lives in session). */
+  id: string;
+  startedAt: string;
+  updatedAt: string;
+  phase: PracticeSessionPhase;
+  /** User turns the rehearsal will allow before auto-wrapping with a summary. */
+  maxUserTurns: number;
+  /** Number of user turns already spoken/typed (trimmed — does not count system notes). */
+  userTurnCount: number;
+  messages: PracticeTurnMessage[];
+  summary: PracticeSessionSummary | null;
+  /** Tripped when crisis language appears — locks further prompts behind the support panel. */
+  crisisTripped: boolean;
+}
+
+/** Slim context Clarity forwards to the practice-turn AI (no PII beyond what is already in session). */
+export interface PracticeAiContextPayload {
+  /** Brain dump excerpt + themes (optional). */
+  brainDump: { text: string; themes: string[] } | null;
+  /** 2–4 short concern phrases (summary.keyThemes or readiness.mainConcerns). */
+  concernHints: string[];
+  /** Therapy goals from intake (if provided). */
+  therapyGoals: string | null;
+  /** Visit reason from intake (if provided). */
+  visitReason: string | null;
+  /** Summary headline for framing. */
+  summaryHeadline: string | null;
+  /** User mood/sleep/stress snapshot when captured. */
+  lifestyle: LifestyleSnapshot | null;
+}
+
+export interface PracticeTurnApiRequestBody {
+  conversation: Pick<
+    PracticeConversationState,
+    "id" | "maxUserTurns" | "userTurnCount" | "messages" | "phase"
+  >;
+  /** Optional — the user's most recent reply (omit for the first/opening turn). */
+  latestUserReply?: string;
+  /** The lightweight rehearsal context built from the session. */
+  context: PracticeAiContextPayload;
+  /** Mode nudge: normal follow-ups, or "wrap" when we want the final summary turn. */
+  mode: "opening" | "follow_up" | "wrap";
+}
+
+export interface PracticeTurnApiResponseBody {
+  /**
+   * When `mode === "wrap"`, the server returns a final summary + an empty `question`.
+   * Otherwise, returns the next therapist-style question (one question, one idea).
+   */
+  question: string;
+  reflection?: string;
+  followUpHint?: string;
+  summary?: PracticeSessionSummary;
+  usedMock: boolean;
+  /** True when the server detected crisis language and halted the rehearsal. */
+  crisisHalt: boolean;
+  crisisReason: string | null;
+}
+
 export type ModalityFilter = "any" | "in_person" | "telehealth";
 
 export interface MatchPreferences {
@@ -215,6 +305,8 @@ export interface ClaritySession {
   nextSteps: NextStepItem[] | null;
   prepSheet: TherapyPrepSheet | null;
   matchPreferences: MatchPreferences | null;
+  /** Interactive rehearsal (chat) transcript — bounded, non-clinical. `null` when not started. */
+  practiceConversation: PracticeConversationState | null;
 }
 
 export interface SummaryRequestBody {

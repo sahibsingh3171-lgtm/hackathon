@@ -47,6 +47,13 @@ export { buildNextSteps } from "./next-steps-templates";
 export { buildPrepSheet, intakeHighlightLines, lifestyleHighlightLines } from "./prep-sheet";
 export { buildPracticeSession } from "./practice-session";
 export {
+  buildPracticeContext,
+  createMessage as createPracticeMessage,
+  createPracticeConversation,
+  DEFAULT_PRACTICE_MAX_USER_TURNS,
+  PRACTICE_MESSAGE_SOFT_LIMIT,
+} from "./practice-conversation";
+export {
   claritySessionPersistence,
   type ClaritySessionPersistence,
 } from "./persisted-session";

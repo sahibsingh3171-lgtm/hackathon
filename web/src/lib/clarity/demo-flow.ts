@@ -199,6 +199,7 @@ export function getDemoSession(): ClaritySession {
     nextSteps,
     prepSheet: null,
     matchPreferences: buildMatchPreferencesFromIntake(intake),
+    practiceConversation: null,
   };
   session = { ...session, prepSheet: buildPrepSheet(session) };
   return session;
