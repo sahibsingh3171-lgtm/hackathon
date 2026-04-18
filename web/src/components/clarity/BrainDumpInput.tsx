@@ -264,7 +264,7 @@ export const BrainDumpInput = forwardRef<
                 <div className="relative">
                   {listening ? (
                     <span
-                      className="absolute inset-0 -m-2 rounded-full border border-primary/25 motion-safe:animate-pulse"
+                      className="pointer-events-none absolute inset-0 -m-2 rounded-full border border-primary/25 motion-safe:animate-pulse"
                       aria-hidden
                     />
                   ) : null}
